@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" data-activity-type="queryactivity">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Query Activity | Automation Studio | Marketing Cloud</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --sf-dark:#032D60;--sf-primary:#0176D3;--sf-bg:#F3F3F3;--sf-card:#FFF;
+    --sf-text:#181818;--sf-text2:#706E6B;--sf-border:#C9C7C5;--sf-hover:#014486;
+    --sf-success:#2E844A;--sf-error:#EA001E;--sf-warning:#FE9339;
+    --sf-sidebar-w:260px;
+  }
+  html{font-size:16px}
+  body{font-family:'Salesforce Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--sf-bg);color:var(--sf-text);min-height:100vh;display:flex;flex-direction:column}
+
+  /* ─── Top Nav ─── */
+  .sf-nav{background:var(--sf-dark);color:#fff;display:flex;align-items:center;height:48px;padding:0 16px;position:sticky;top:0;z-index:100}
+  .sf-nav__logo{font-weight:700;font-size:15px;letter-spacing:.3px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .sf-nav__logo svg{width:24px;height:24px;fill:#fff}
+  .sf-nav__items{display:flex;gap:0;margin-left:24px;height:100%}
+  .sf-nav__item{padding:0 14px;font-size:13px;display:flex;align-items:center;cursor:pointer;position:relative;color:rgba(255,255,255,.85);transition:background .15s}
+  .sf-nav__item:hover,.sf-nav__item--active{background:rgba(255,255,255,.12);color:#fff}
+  .sf-nav__item--active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:#fff;border-radius:3px 3px 0 0}
+  .sf-nav__right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .sf-nav__avatar{width:28px;height:28px;border-radius:50%;background:#0176D3;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer}
+  .sf-nav__icon{cursor:pointer;opacity:.7;transition:opacity .15s}
+  .sf-nav__icon:hover{opacity:1}
+
+  /* ─── Sub Nav / App Switcher ─── */
+  .sf-subnav{background:#1B4F8A;color:#fff;display:flex;align-items:center;height:40px;padding:0 16px;font-size:13px}
+  .sf-subnav__label{font-weight:600;margin-right:20px;display:flex;align-items:center;gap:6px}
+  .sf-subnav__tabs{display:flex;gap:0;height:100%}
+  .sf-subnav__tab{padding:0 14px;display:flex;align-items:center;cursor:pointer;color:rgba(255,255,255,.8);transition:background .15s;font-size:12.5px}
+  .sf-subnav__tab:hover,.sf-subnav__tab--active{background:rgba(255,255,255,.1);color:#fff}
+  .sf-subnav__tab--active{border-bottom:2px solid #fff}
+
+  /* ─── Breadcrumb ─── */
+  .sf-breadcrumb{padding:12px 16px 12px calc(var(--sf-sidebar-w) + 16px);font-size:12px;color:var(--sf-text2);background:#fff;border-bottom:1px solid var(--sf-border)}
+  .sf-breadcrumb a{color:var(--sf-primary);text-decoration:none}
+  .sf-breadcrumb a:hover{text-decoration:underline}
+  .sf-breadcrumb span{margin:0 6px;color:var(--sf-border)}
+
+  /* ─── Layout ─── */
+  .sf-layout{display:flex;flex:1;min-height:0}
+
+  /* ─── Sidebar ─── */
+  .sf-sidebar{width:var(--sf-sidebar-w);background:#fff;border-right:1px solid var(--sf-border);overflow-y:auto;flex-shrink:0;padding:12px 0}
+  .sf-sidebar h3{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--sf-text2);padding:8px 16px 4px;font-weight:600}
+  .sf-tree{list-style:none;padding:0;margin:0}
+  .sf-tree li{padding:0}
+  .sf-tree__item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:13px;cursor:pointer;transition:background .1s;color:var(--sf-text)}
+  .sf-tree__item:hover{background:rgba(1,118,211,.06)}
+  .sf-tree__item--active{background:rgba(1,118,211,.1);color:var(--sf-primary);font-weight:600}
+  .sf-tree__icon{width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .sf-tree__toggle{width:16px;text-align:center;font-size:10px;color:var(--sf-text2);cursor:pointer;flex-shrink:0}
+  .sf-tree__children{margin-left:24px}
+  .sf-tree__children .sf-tree__item{padding-left:8px}
+
+  /* ─── Main Content ─── */
+  .sf-main{flex:1;padding:20px 24px;overflow-y:auto;min-width:0}
+
+  /* ─── Card ─── */
+  .sf-card{background:var(--sf-card);border:1px solid var(--sf-border);border-radius:4px;margin-bottom:16px}
+  .sf-card__header{padding:12px 16px;border-bottom:1px solid #E5E5E5;display:flex;align-items:center;justify-content:space-between}
+  .sf-card__title{font-size:14px;font-weight:600}
+  .sf-card__body{padding:16px}
+
+  /* ─── Form Elements ─── */
+  .sf-form-group{margin-bottom:16px}
+  .sf-label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--sf-text)}
+  .sf-input{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--sf-border);border-radius:4px;background:#fff;color:var(--sf-text);transition:border .15s,box-shadow .15s;font-family:inherit}
+  .sf-input:focus{outline:none;border-color:var(--sf-primary);box-shadow:0 0 0 3px rgba(1,118,211,.15)}
+  .sf-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23706E6B' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+  .sf-radio-group{display:flex;gap:20px;align-items:center}
+  .sf-radio{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+  .sf-radio input{accent-color:var(--sf-primary);cursor:pointer}
+
+  /* ─── SQL Textarea ─── */
+  .sql-editor{position:relative}
+  .sql-editor textarea,
+  #queryText{
+    width:100%;min-height:280px;font-family:'SF Mono','Fira Code','Cascadia Code',Consolas,'Courier New',monospace;
+    font-size:13px;line-height:1.6;padding:14px 16px;border:1px solid var(--sf-border);border-radius:4px;
+    background:#FAFAF9;color:var(--sf-text);resize:vertical;tab-size:2;transition:border .15s,box-shadow .15s
+  }
+  #queryText:focus{outline:none;border-color:var(--sf-primary);box-shadow:0 0 0 3px rgba(1,118,211,.15)}
+  .sql-editor__meta{display:flex;gap:16px;margin-top:6px;font-size:11px;color:var(--sf-text2)}
+
+  /* ─── Buttons ─── */
+  .sf-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-size:13px;font-weight:600;
+    border:1px solid transparent;border-radius:4px;cursor:pointer;transition:background .15s,border .15s;font-family:inherit}
+  .sf-btn--primary{background:var(--sf-primary);color:#fff;border-color:var(--sf-primary)}
+  .sf-btn--primary:hover{background:var(--sf-hover)}
+  .sf-btn--neutral{background:#fff;color:var(--sf-text);border-color:var(--sf-border)}
+  .sf-btn--neutral:hover{background:#F3F3F3}
+  .sf-btn--destructive{background:var(--sf-error);color:#fff}
+  .sf-btn--success{background:var(--sf-success);color:#fff}
+  .sf-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+
+  /* ─── Collapsible ─── */
+  .sf-collapse__trigger{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+  .sf-collapse__trigger::before{content:'▸';font-size:11px;color:var(--sf-text2);transition:transform .2s;display:inline-block}
+  .sf-collapse__trigger.open::before{transform:rotate(90deg)}
+  .sf-collapse__content{display:none;padding:10px 0 0}
+  .sf-collapse__content.show{display:block}
+
+  /* ─── Fields Table ─── */
+  .sf-fields-table{width:100%;border-collapse:collapse;font-size:12px}
+  .sf-fields-table th{text-align:left;padding:6px 10px;background:#F3F3F3;border:1px solid #E5E5E5;font-weight:600;color:var(--sf-text2);text-transform:uppercase;letter-spacing:.5px;font-size:10px}
+  .sf-fields-table td{padding:6px 10px;border:1px solid #E5E5E5;font-size:12px}
+  .sf-fields-table tr:hover td{background:#F8FBFE}
+  .sf-fields-table .pk{color:var(--sf-primary);font-weight:600}
+
+  /* ─── Data View Tag ─── */
+  .dv-name{font-family:'SF Mono',Consolas,monospace;font-size:12px;color:var(--sf-primary);background:rgba(1,118,211,.08);padding:2px 6px;border-radius:3px;font-weight:600}
+
+  /* ─── Test Panel ─── */
+  .test-panel{position:fixed;top:96px;right:16px;width:340px;background:#fff;border:2px solid var(--sf-primary);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:200;font-size:12px;max-height:calc(100vh - 112px);display:flex;flex-direction:column}
+  .test-panel__header{background:var(--sf-primary);color:#fff;padding:10px 14px;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:space-between;cursor:pointer;flex-shrink:0}
+  .test-panel__header h3{font-size:13px;margin:0}
+  .test-panel__toggle{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1}
+  .test-panel__body{padding:14px;overflow-y:auto;flex:1}
+  .test-panel__body h4{font-size:12px;font-weight:600;margin:10px 0 4px;color:var(--sf-primary)}
+  .test-panel__body h4:first-child{margin-top:0}
+  .test-panel__body p,.test-panel__body li{line-height:1.5;color:#444}
+  .test-panel__body ol,.test-panel__body ul{padding-left:18px;margin:4px 0 8px}
+  .test-panel__body code{background:#F0F0F0;padding:1px 4px;border-radius:2px;font-size:11px}
+  .test-panel__check{color:var(--sf-success)}
+  .test-panel.collapsed .test-panel__body{display:none}
+
+  /* ─── Footer ─── */
+  .sf-footer{background:#fff;border-top:1px solid var(--sf-border);padding:12px 16px;text-align:center;font-size:11px;color:var(--sf-text2);flex-shrink:0}
+  .sf-footer a{color:var(--sf-primary);text-decoration:none}
+  .sf-footer a:hover{text-decoration:underline}
+
+  /* ─── Toast ─── */
+  .sf-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:6px;font-size:13px;z-index:300;display:none;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+  .sf-toast.show{display:flex}
+
+  /* ─── Responsive ─── */
+  @media(max-width:900px){
+    .sf-sidebar{display:none}
+    .sf-breadcrumb{padding-left:16px}
+    .test-panel{width:calc(100vw - 32px);right:16px}
+  }
+  @media(max-width:600px){
+    .sf-nav__items{display:none}
+    .sf-subnav__tabs{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ TOP NAV ════════ -->
+<nav class="sf-nav">
+  <div class="sf-nav__logo">
+    <svg viewBox="0 0 24 24"><path d="M12.7 2.5c-1.8 0-3.4.9-4.4 2.2A4.8 4.8 0 004 6.4a5 5 0 00-4 4.9c0 2.7 2.2 4.9 5 4.9h.3a4.5 4.5 0 003.6 1.9 4 4 0 003.1-1.4 4.4 4.4 0 003.3 1.4c2 0 3.7-1.4 4.2-3.3h.2c2.6 0 4.8-2 4.8-4.6 0-2.5-2-4.5-4.5-4.6A5.5 5.5 0 0012.7 2.5z"/></svg>
+    Marketing Cloud
+  </div>
+  <div class="sf-nav__items">
+    <div class="sf-nav__item">Email Studio</div>
+    <div class="sf-nav__item">Journey Builder</div>
+    <div class="sf-nav__item sf-nav__item--active">Automation Studio</div>
+    <div class="sf-nav__item">Audience Builder</div>
+    <div class="sf-nav__item">Analytics Builder</div>
+    <div class="sf-nav__item">Content Builder</div>
+  </div>
+  <div class="sf-nav__right">
+    <div class="sf-nav__icon" title="Help">
+      <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 9a3 3 0 115.83 1c0 2-3 2-3 4m0 4h.01"/></svg>
+    </div>
+    <div class="sf-nav__icon" title="Setup">
+      <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.2.55.68.94 1.27 1H21a2 2 0 010 4h-.09c-.59.06-1.07.45-1.27 1z"/></svg>
+    </div>
+    <div class="sf-nav__avatar" title="Demo User">DU</div>
+  </div>
+</nav>
+
+<!-- ════════ SUB NAV ════════ -->
+<div class="sf-subnav">
+  <div class="sf-subnav__label">
+    <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    Automation Studio
+  </div>
+  <div class="sf-subnav__tabs">
+    <div class="sf-subnav__tab">Overview</div>
+    <div class="sf-subnav__tab sf-subnav__tab--active">Activities</div>
+    <div class="sf-subnav__tab">Automations</div>
+    <div class="sf-subnav__tab">Log</div>
+  </div>
+</div>
+
+<!-- ════════ BREADCRUMB ════════ -->
+<div class="sf-breadcrumb">
+  <a href="#">Automation Studio</a><span>›</span>
+  <a href="#">Activities</a><span>›</span>
+  <strong>Query Activity</strong>
+</div>
+
+<!-- ════════ MAIN LAYOUT ════════ -->
+<div class="sf-layout">
+
+  <!-- ──── SIDEBAR ──── -->
+  <aside class="sf-sidebar">
+    <h3>Folders</h3>
+    <ul class="sf-tree">
+      <li>
+        <div class="sf-tree__item" onclick="this.querySelector('.sf-tree__toggle')?.click()">
+          <span class="sf-tree__toggle open" onclick="event.stopPropagation();toggleTree(this)">▾</span>
+          <span class="sf-tree__icon">📁</span> My Activities
+        </div>
+        <ul class="sf-tree__children sf-tree">
+          <li><div class="sf-tree__item sf-tree__item--active"><span class="sf-tree__icon">🔍</span> Query Activities</div></li>
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">📊</span> Data Extracts</div></li>
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">📥</span> File Transfers</div></li>
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">📜</span> Script Activities</div></li>
+        </ul>
+      </li>
+      <li>
+        <div class="sf-tree__item">
+          <span class="sf-tree__toggle" onclick="event.stopPropagation();toggleTree(this)">▸</span>
+          <span class="sf-tree__icon">📁</span> Shared Activities
+        </div>
+        <ul class="sf-tree__children sf-tree" style="display:none">
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">🔍</span> Team Queries</div></li>
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">🔍</span> Reporting Queries</div></li>
+        </ul>
+      </li>
+      <li>
+        <div class="sf-tree__item">
+          <span class="sf-tree__toggle" onclick="event.stopPropagation();toggleTree(this)">▸</span>
+          <span class="sf-tree__icon">📁</span> Data Extensions
+        </div>
+        <ul class="sf-tree__children sf-tree" style="display:none">
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">📋</span> Subscriber_Master</div></li>
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">📋</span> Email_Sends_Log</div></li>
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">📋</span> Engagement_Data</div></li>
+          <li><div class="sf-tree__item"><span class="sf-tree__icon">📋</span> Campaign_Results</div></li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3 style="margin-top:20px">Recent Queries</h3>
+    <ul class="sf-tree">
+      <li><div class="sf-tree__item"><span class="sf-tree__icon">🕐</span> Engagement Report</div></li>
+      <li><div class="sf-tree__item"><span class="sf-tree__icon">🕐</span> Bounce Cleanup</div></li>
+      <li><div class="sf-tree__item"><span class="sf-tree__icon">🕐</span> Subscriber Segment</div></li>
+    </ul>
+  </aside>
+
+  <!-- ──── MAIN CONTENT ──── -->
+  <main class="sf-main query-activity" data-activity-type="queryactivity">
+
+    <!-- Activity Name -->
+    <div class="sf-card">
+      <div class="sf-card__header">
+        <div class="sf-card__title">Query Activity Configuration</div>
+        <span style="font-size:11px;color:var(--sf-text2)">Last modified: Jan 31, 2026 11:42 PM</span>
+      </div>
+      <div class="sf-card__body">
+        <div class="sf-form-group">
+          <label class="sf-label">Activity Name</label>
+          <input type="text" class="sf-input" value="My Query Activity" style="max-width:400px">
+        </div>
+        <div class="sf-form-group">
+          <label class="sf-label">Description</label>
+          <input type="text" class="sf-input" placeholder="Enter a description for this activity..." style="max-width:600px" value="Pulls subscriber engagement data from the last 30 days">
+        </div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div class="sf-form-group" style="flex:1;min-width:200px;max-width:300px">
+            <label class="sf-label">Target Data Extension</label>
+            <select class="sf-input sf-select">
+              <option>Subscriber_Master</option>
+              <option selected>Engagement_Data</option>
+              <option>Email_Sends_Log</option>
+              <option>Campaign_Results</option>
+              <option>Active_Subscribers_30d</option>
+            </select>
+          </div>
+          <div class="sf-form-group">
+            <label class="sf-label">Update Type</label>
+            <div class="sf-radio-group" style="margin-top:6px">
+              <label class="sf-radio"><input type="radio" name="updateType" checked> Overwrite</label>
+              <label class="sf-radio"><input type="radio" name="updateType"> Update</label>
+              <label class="sf-radio"><input type="radio" name="updateType"> Append</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQL Query -->
+    <div class="sf-card">
+      <div class="sf-card__header">
+        <div class="sf-card__title">SQL Query</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="sf-btn sf-btn--neutral" style="padding:4px 10px;font-size:11px" onclick="toggleFieldsPanel()">📋 Fields</button>
+          <button class="sf-btn sf-btn--neutral" style="padding:4px 10px;font-size:11px" onclick="toggleDataViews()">📖 Data Views</button>
+        </div>
+      </div>
+      <div class="sf-card__body">
+        <div class="sql-editor">
+          <textarea id="queryText" name="queryText" class="sf-input" spellcheck="false">SELECT
+  s.SubscriberKey,
+  s.EmailAddress,
+  s.FirstName,
+  s.LastName,
+  o.EventDate as LastOpenDate,
+  COUNT(o.EventDate) as TotalOpens
+FROM _Subscribers s
+LEFT JOIN _Open o ON s.SubscriberKey = o.SubscriberKey
+WHERE o.EventDate > DATEADD(day, -30, GETDATE())
+GROUP BY s.SubscriberKey, s.EmailAddress, s.FirstName, s.LastName, o.EventDate
+ORDER BY TotalOpens DESC</textarea>
+          <div class="sql-editor__meta">
+            <span id="charCount">Characters: 338</span>
+            <span id="lineCount">Lines: 14</span>
+            <span style="margin-left:auto;color:var(--sf-success)">✓ Syntax OK</span>
+          </div>
+        </div>
+        <div class="sf-actions">
+          <button class="sf-btn sf-btn--neutral" onclick="showToast('✓ Syntax validated successfully')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Validate Syntax
+          </button>
+          <button class="sf-btn sf-btn--primary" onclick="showToast('✓ Query Activity saved')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+            Save
+          </button>
+          <button class="sf-btn sf-btn--primary" onclick="showToast('✓ Saved & closing...')">Save &amp; Close</button>
+          <button class="sf-btn sf-btn--neutral" onclick="showToast('Run started — check Automation Log')">▶ Run Now</button>
+          <button class="sf-btn sf-btn--neutral" style="margin-left:auto" onclick="showToast('Cancelled')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Extension Fields Panel (hidden by default, togglable) -->
+    <div class="sf-card" id="fieldsPanel" style="display:none">
+      <div class="sf-card__header">
+        <div class="sf-card__title">📋 Target DE Fields — Engagement_Data</div>
+        <button class="sf-btn sf-btn--neutral" style="padding:4px 10px;font-size:11px" onclick="toggleFieldsPanel()">✕ Close</button>
+      </div>
+      <div class="sf-card__body" style="padding:0">
+        <table class="sf-fields-table" id="deFieldsTable">
+          <thead>
+            <tr><th>Field Name</th><th>Data Type</th><th>Length</th><th>Primary Key</th><th>Nullable</th><th>Default</th></tr>
+          </thead>
+          <tbody>
+            <tr data-field-name="SubscriberKey"><td class="pk">SubscriberKey</td><td>Text</td><td>254</td><td>✓</td><td>No</td><td>—</td></tr>
+            <tr data-field-name="EmailAddress"><td>EmailAddress</td><td>EmailAddress</td><td>254</td><td></td><td>No</td><td>—</td></tr>
+            <tr data-field-name="FirstName"><td>FirstName</td><td>Text</td><td>100</td><td></td><td>Yes</td><td>—</td></tr>
+            <tr data-field-name="LastName"><td>LastName</td><td>Text</td><td>100</td><td></td><td>Yes</td><td>—</td></tr>
+            <tr data-field-name="Status"><td>Status</td><td>Text</td><td>50</td><td></td><td>Yes</td><td>Active</td></tr>
+            <tr data-field-name="CreatedDate"><td>CreatedDate</td><td>Date</td><td>—</td><td></td><td>No</td><td>GETDATE()</td></tr>
+            <tr data-field-name="ModifiedDate"><td>ModifiedDate</td><td>Date</td><td>—</td><td></td><td>No</td><td>GETDATE()</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- System Data Views Reference -->
+    <div class="sf-card" id="dataViewsPanel" style="display:none">
+      <div class="sf-card__header">
+        <div class="sf-card__title">📖 System Data Views Reference</div>
+        <button class="sf-btn sf-btn--neutral" style="padding:4px 10px;font-size:11px" onclick="toggleDataViews()">✕ Close</button>
+      </div>
+      <div class="sf-card__body">
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger open" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Subscribers</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">All subscribers in the account</span>
+          </div>
+          <div class="sf-collapse__content show">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="SubscriberKey"><td>SubscriberKey</td><td>nvarchar</td><td>Unique subscriber identifier</td></tr>
+              <tr data-field-name="EmailAddress"><td>EmailAddress</td><td>nvarchar</td><td>Subscriber email</td></tr>
+              <tr data-field-name="Status"><td>Status</td><td>nvarchar</td><td>Active, Held, Unsubscribed, Bounced</td></tr>
+              <tr data-field-name="DateJoined"><td>DateJoined</td><td>datetime</td><td>Date subscriber was added</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Open</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">Email open tracking events</span>
+          </div>
+          <div class="sf-collapse__content">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="SubscriberKey"><td>SubscriberKey</td><td>nvarchar</td><td>Subscriber who opened</td></tr>
+              <tr data-field-name="EventDate"><td>EventDate</td><td>datetime</td><td>When the open occurred</td></tr>
+              <tr data-field-name="SendID"><td>SendID</td><td>int</td><td>Associated send job</td></tr>
+              <tr data-field-name="BatchID"><td>BatchID</td><td>int</td><td>Batch number</td></tr>
+              <tr data-field-name="TriggeredSendID"><td>TriggeredSendID</td><td>int</td><td>Triggered send identifier</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Click</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">Email click tracking events</span>
+          </div>
+          <div class="sf-collapse__content">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="SubscriberKey"><td>SubscriberKey</td><td>nvarchar</td><td>Subscriber who clicked</td></tr>
+              <tr data-field-name="EventDate"><td>EventDate</td><td>datetime</td><td>When the click occurred</td></tr>
+              <tr data-field-name="SendID"><td>SendID</td><td>int</td><td>Associated send job</td></tr>
+              <tr data-field-name="URL"><td>URL</td><td>nvarchar</td><td>Clicked URL</td></tr>
+              <tr data-field-name="LinkName"><td>LinkName</td><td>nvarchar</td><td>Name of the link</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Bounce</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">Email bounce events</span>
+          </div>
+          <div class="sf-collapse__content">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="SubscriberKey"><td>SubscriberKey</td><td>nvarchar</td><td>Bounced subscriber</td></tr>
+              <tr data-field-name="EventDate"><td>EventDate</td><td>datetime</td><td>When the bounce occurred</td></tr>
+              <tr data-field-name="SendID"><td>SendID</td><td>int</td><td>Associated send job</td></tr>
+              <tr data-field-name="BounceCategory"><td>BounceCategory</td><td>nvarchar</td><td>Hard, Soft, Block, etc.</td></tr>
+              <tr data-field-name="BounceType"><td>BounceType</td><td>nvarchar</td><td>Specific bounce reason</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Sent</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">Email send events</span>
+          </div>
+          <div class="sf-collapse__content">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="SubscriberKey"><td>SubscriberKey</td><td>nvarchar</td><td>Subscriber sent to</td></tr>
+              <tr data-field-name="EventDate"><td>EventDate</td><td>datetime</td><td>When the send occurred</td></tr>
+              <tr data-field-name="SendID"><td>SendID</td><td>int</td><td>Send job identifier</td></tr>
+              <tr data-field-name="BatchID"><td>BatchID</td><td>int</td><td>Batch number</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Unsubscribe</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">Unsubscribe events</span>
+          </div>
+          <div class="sf-collapse__content">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="SubscriberKey"><td>SubscriberKey</td><td>nvarchar</td><td>Unsubscribed subscriber</td></tr>
+              <tr data-field-name="EventDate"><td>EventDate</td><td>datetime</td><td>When the unsub occurred</td></tr>
+              <tr data-field-name="SendID"><td>SendID</td><td>int</td><td>Associated send job</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Complaint</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">Spam complaint events</span>
+          </div>
+          <div class="sf-collapse__content">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="SubscriberKey"><td>SubscriberKey</td><td>nvarchar</td><td>Complaining subscriber</td></tr>
+              <tr data-field-name="EventDate"><td>EventDate</td><td>datetime</td><td>When the complaint occurred</td></tr>
+              <tr data-field-name="SendID"><td>SendID</td><td>int</td><td>Associated send job</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="sf-collapse" style="margin-bottom:10px">
+          <div class="sf-collapse__trigger" onclick="toggleCollapse(this)">
+            <span class="dv-name">_Job</span> <span style="font-size:11px;color:var(--sf-text2);margin-left:8px">Email send job metadata</span>
+          </div>
+          <div class="sf-collapse__content">
+            <table class="sf-fields-table"><thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead><tbody>
+              <tr data-field-name="JobID"><td>JobID</td><td>int</td><td>Unique job identifier</td></tr>
+              <tr data-field-name="EmailName"><td>EmailName</td><td>nvarchar</td><td>Name of the email</td></tr>
+              <tr data-field-name="DeliveredTime"><td>DeliveredTime</td><td>datetime</td><td>When delivery completed</td></tr>
+              <tr data-field-name="EmailSubject"><td>EmailSubject</td><td>nvarchar</td><td>Subject line of the email</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ════════ FOOTER ════════ -->
+<footer class="sf-footer">
+  © 2026 Salesforce, Inc. All rights reserved. Various trademarks held by their respective owners.
+  &nbsp;·&nbsp; <a href="#">Privacy</a> &nbsp;·&nbsp; <a href="#">Terms</a> &nbsp;·&nbsp; <a href="#">Trust</a> &nbsp;·&nbsp; <a href="#">Status</a>
+  <br><span style="font-size:10px;color:#999">Simulated environment for Query Studio Pro extension testing — not a real SFMC instance</span>
+</footer>
+
+<!-- ════════ TEST PANEL ════════ -->
+<div class="test-panel" id="testPanel">
+  <div class="test-panel__header" onclick="document.getElementById('testPanel').classList.toggle('collapsed')">
+    <h3>🧪 Test Environment</h3>
+    <button class="test-panel__toggle">−</button>
+  </div>
+  <div class="test-panel__body">
+    <p style="margin-bottom:8px"><strong>SFMC Query Studio Pro</strong> — Test Page</p>
+    <p>This page simulates the SFMC Query Activity interface.</p>
+
+    <h4>To test the Chrome extension:</h4>
+    <ol>
+      <li>Load the extension in <code>chrome://extensions</code> (Developer mode → Load unpacked)</li>
+      <li>Point it to: <code>/projects/sfmc-tools/query-studio-pro/</code></li>
+      <li>Open this page — the extension should auto-enhance the SQL textarea</li>
+      <li>Try: Format (<code>Ctrl+Shift+F</code>), Save snippet, Load templates, Dark mode</li>
+    </ol>
+
+    <h4>To test standalone version:</h4>
+    <ol>
+      <li>Open <code>/standalone/index.html</code> directly in your browser</li>
+      <li>No extension needed — everything is built in</li>
+    </ol>
+
+    <h4>Features to test:</h4>
+    <ul style="list-style:none;padding-left:2px">
+      <li><span class="test-panel__check">✅</span> SQL syntax highlighting</li>
+      <li><span class="test-panel__check">✅</span> Auto-complete (type SELECT, FROM, etc.)</li>
+      <li><span class="test-panel__check">✅</span> Format SQL (<code>Ctrl+Shift+F</code>)</li>
+      <li><span class="test-panel__check">✅</span> Save/Load snippets</li>
+      <li><span class="test-panel__check">✅</span> Query templates</li>
+      <li><span class="test-panel__check">✅</span> Dark/Light mode toggle</li>
+      <li><span class="test-panel__check">✅</span> Copy to clipboard</li>
+      <li><span class="test-panel__check">✅</span> Field reference sidebar</li>
+      <li><span class="test-panel__check">✅</span> Line numbers</li>
+      <li><span class="test-panel__check">✅</span> Character/line count</li>
+    </ul>
+
+    <h4>DOM Detection Points:</h4>
+    <ul style="font-size:11px">
+      <li><code>#queryText</code> textarea ✓</li>
+      <li><code>.query-activity</code> class ✓</li>
+      <li><code>.sql-editor</code> class ✓</li>
+      <li><code>[data-activity-type]</code> attr ✓</li>
+      <li><code>[data-field-name]</code> attrs ✓</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ════════ TOAST ════════ -->
+<div class="sf-toast" id="toast"></div>
+
+<script>
+  // Textarea stats
+  const ta = document.getElementById('queryText');
+  const charEl = document.getElementById('charCount');
+  const lineEl = document.getElementById('lineCount');
+  function updateStats() {
+    charEl.textContent = 'Characters: ' + ta.value.length;
+    lineEl.textContent = 'Lines: ' + ta.value.split('\n').length;
+  }
+  ta.addEventListener('input', updateStats);
+  updateStats();
+
+  // Tab support in textarea
+  ta.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = this.selectionStart, end = this.selectionEnd;
+      this.value = this.value.substring(0, s) + '  ' + this.value.substring(end);
+      this.selectionStart = this.selectionEnd = s + 2;
+      updateStats();
+    }
+  });
+
+  // Toggle panels
+  function toggleFieldsPanel() {
+    const p = document.getElementById('fieldsPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (p.style.display === 'block') p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function toggleDataViews() {
+    const p = document.getElementById('dataViewsPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (p.style.display === 'block') p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Collapsible sections
+  function toggleCollapse(trigger) {
+    trigger.classList.toggle('open');
+    const content = trigger.nextElementSibling;
+    content.classList.toggle('show');
+  }
+
+  // Sidebar tree toggle
+  function toggleTree(el) {
+    event.stopPropagation();
+    const children = el.closest('li').querySelector('.sf-tree__children');
+    if (!children) return;
+    const open = children.style.display !== 'none';
+    children.style.display = open ? 'none' : 'block';
+    el.textContent = open ? '▸' : '▾';
+    el.classList.toggle('open', !open);
+  }
+
+  // Toast notification
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>

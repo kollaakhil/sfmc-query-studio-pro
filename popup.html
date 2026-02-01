@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Query Studio Pro</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg2: #f3f3f3;
+      --bg3: #fafbfc;
+      --bg-hover: #e8ecf1;
+      --bg-active: #d8edff;
+      --text: #181b20;
+      --text2: #5a6872;
+      --text3: #9faab5;
+      --border: #d8dde6;
+      --border-light: #e8ecf1;
+      --accent: #0176d3;
+      --accent-hover: #014486;
+      --accent-light: #e1f5fe;
+      --success: #2e844a;
+      --warning: #dd7a01;
+      --error: #ea001e;
+      --radius: 8px;
+      --radius-sm: 4px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', monospace;
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dark {
+      --bg: #1e2030;
+      --bg2: #262840;
+      --bg3: #2a2c44;
+      --bg-hover: #333558;
+      --bg-active: #3b3d5e;
+      --text: #e4e6f0;
+      --text2: #a0a4b8;
+      --text3: #6e7191;
+      --border: #3b3d5e;
+      --border-light: #44466e;
+      --accent: #82b1ff;
+      --accent-hover: #448aff;
+      --accent-light: #1a237e33;
+      --success: #69f0ae;
+      --warning: #ffd740;
+      --error: #ff5252;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 400px;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--accent), #0288d1);
+      color: #fff;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 8px; }
+
+    .header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-version {
+      font-size: 10px;
+      background: rgba(255,255,255,0.2);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 10px;
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .header-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .header-stat-num {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .icon-btn {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition);
+    }
+
+    .icon-btn:hover { background: rgba(255,255,255,0.3); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all var(--transition);
+    }
+
+    .tab:hover { color: var(--text); background: var(--bg-hover); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-content { display: none; padding: 14px 18px; }
+    .tab-content.active { display: block; }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .quick-btn {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--transition);
+    }
+
+    .quick-btn:hover { border-color: var(--accent); background: var(--bg-hover); }
+    .quick-btn:active { transform: scale(0.98); }
+    .quick-btn .emoji { font-size: 16px; }
+
+    /* Search input */
+    .search-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      margin-bottom: 12px;
+      font-family: var(--font);
+      transition: all var(--transition);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    /* Snippet items */
+    .snippet-item {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .snippet-item:hover {
+      border-color: var(--accent);
+      background: var(--bg-hover);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .snippet-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+
+    .snippet-preview {
+      font-size: 11px;
+      color: var(--text2);
+      font-family: var(--mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .snippet-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .snippet-actions { display: flex; gap: 4px; }
+
+    .small-btn {
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .small-btn:hover { border-color: var(--accent); background: var(--bg-hover); }
+    .small-btn:active { transform: scale(0.97); }
+    .small-btn.danger:hover { border-color: var(--error); color: var(--error); }
+
+    /* History items */
+    .history-item {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .history-item:hover {
+      border-color: var(--accent);
+      background: var(--bg-hover);
+    }
+
+    .history-time {
+      font-size: 10px;
+      color: var(--text3);
+      font-family: var(--font);
+      margin-top: 4px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    .empty-state .emoji { font-size: 36px; margin-bottom: 10px; }
+
+    /* Settings */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .setting-label { font-size: 13px; font-weight: 500; }
+    .setting-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+    .toggle {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+
+    .toggle.on { background: var(--accent); }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle.on::after { transform: translateX(18px); }
+
+    /* Range slider */
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .range-slider {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .range-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 28px;
+      text-align: center;
+    }
+
+    /* Select */
+    .select-small {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Section header */
+    .section-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 16px 0 8px;
+    }
+
+    /* Action button */
+    .action-btn {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 8px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all var(--transition);
+    }
+
+    .action-btn:hover { border-color: var(--accent); background: var(--bg-hover); }
+
+    /* Shortcuts table */
+    .shortcuts { font-size: 12px; color: var(--text2); }
+    .shortcuts table { width: 100%; border-collapse: collapse; }
+    .shortcuts td { padding: 7px 0; vertical-align: middle; }
+    .shortcuts td:first-child { font-weight: 500; color: var(--text); }
+    .shortcuts td:last-child { text-align: right; }
+
+    kbd {
+      padding: 2px 7px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg2);
+      font-family: var(--mono);
+      font-size: 10px;
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    /* Links */
+    .link-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity var(--transition);
+    }
+
+    .link-row:hover { opacity: 0.8; }
+
+    /* Footer */
+    .footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      background: var(--bg2);
+    }
+
+    .footer a { color: var(--accent); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <h1>⚡ Query Studio Pro</h1>
+      <span class="header-version">v2.0</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button class="icon-btn" id="toggle-dark" title="Toggle dark mode">🌙</button>
+    </div>
+  </div>
+
+  <div style="padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:16px;">
+    <div class="header-stat">
+      <span class="header-stat-num" id="snippet-count">0</span>
+      <span>snippets</span>
+    </div>
+    <div class="header-stat">
+      <span class="header-stat-num" id="history-count">0</span>
+      <span>queries</span>
+    </div>
+    <div class="header-stat">
+      <span class="header-stat-num">16</span>
+      <span>templates</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="snippets">📚 Snippets</button>
+    <button class="tab" data-tab="history">🕐 History</button>
+    <button class="tab" data-tab="settings">⚙️ Settings</button>
+  </div>
+
+  <div class="tab-content active" id="tab-snippets">
+    <div class="quick-actions">
+      <button class="quick-btn" id="format-last">
+        <span class="emoji">🎨</span>
+        <span>Format Last Query</span>
+      </button>
+      <button class="quick-btn" id="clear-history-quick">
+        <span class="emoji">🗑️</span>
+        <span>Clear History</span>
+      </button>
+    </div>
+    <input type="text" class="search-input" id="snippet-search" placeholder="🔍 Search snippets...">
+    <div id="snippet-list"></div>
+  </div>
+
+  <div class="tab-content" id="tab-history">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:12px;color:var(--text2);" id="history-count-label">0 queries</span>
+      <button class="small-btn danger" id="clear-history">Clear All</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <div class="tab-content" id="tab-settings">
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Dark Mode</div>
+        <div class="setting-desc">Use dark theme everywhere</div>
+      </div>
+      <div class="toggle" id="dark-toggle"></div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Font Size</div>
+        <div class="setting-desc">Editor font size</div>
+      </div>
+      <div class="range-row">
+        <input type="range" class="range-slider" id="font-size-slider" min="10" max="20" value="13">
+        <span class="range-value" id="font-size-value">13px</span>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Tab Size</div>
+        <div class="setting-desc">Spaces per tab indent</div>
+      </div>
+      <select class="select-small" id="tab-size-select">
+        <option value="2">2 spaces</option>
+        <option value="4">4 spaces</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Auto-format on Paste</div>
+        <div class="setting-desc">Automatically format SQL when pasted</div>
+      </div>
+      <div class="toggle" id="autoformat-toggle"></div>
+    </div>
+
+    <div class="section-header">Actions</div>
+    <button class="action-btn" id="export-snippets">📤 Export Snippets (JSON)</button>
+    <button class="action-btn" id="import-snippets">📥 Import Snippets</button>
+    <input type="file" id="import-file" accept=".json" style="display:none;">
+
+    <div class="section-header">Keyboard Shortcuts</div>
+    <div class="shortcuts">
+      <table>
+        <tr><td>Format SQL</td><td><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>F</kbd></td></tr>
+        <tr><td>Save Snippet</td><td><kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>S</kbd></td></tr>
+        <tr><td>Copy Query</td><td><kbd>⌘</kbd> <kbd>C</kbd></td></tr>
+        <tr><td>Autocomplete</td><td>Type 2+ characters</td></tr>
+        <tr><td>Navigate suggestions</td><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></td></tr>
+      </table>
+    </div>
+
+    <div class="section-header">Links</div>
+    <a class="link-row" href="https://github.com/kollaakhil/sfmc-query-studio-pro" target="_blank">📖 Documentation & Source</a>
+    <a class="link-row" href="https://github.com/kollaakhil/sfmc-query-studio-pro/issues" target="_blank">🐛 Report a Bug</a>
+    <a class="link-row" href="#" id="rate-link">⭐ Rate this Extension</a>
+  </div>
+
+  <div class="footer">
+    SFMC Query Studio Pro v2.0.0 · Made with ❤️ by <a href="https://github.com/kollaakhil" target="_blank">Akhil Kolla</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
