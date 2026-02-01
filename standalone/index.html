@@ -3,1341 +3,1487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚡ SFMC Query Studio Pro</title>
+<title>SFMC Query Studio Pro</title>
 <style>
-/* ═══════════════════════════════════════════════════════════════
-   SFMC Query Studio Pro — Standalone Edition
-   Single-file, zero-dependency SQL editor for SFMC
-   ═══════════════════════════════════════════════════════════════ */
-
-:root {
-  /* Dark theme (default) */
-  --bg-primary: #1E1E2E;
-  --bg-secondary: #181825;
-  --bg-tertiary: #11111B;
-  --bg-surface: #313244;
-  --bg-hover: #45475A;
-  --text-primary: #CDD6F4;
-  --text-secondary: #A6ADC8;
-  --text-muted: #6C7086;
-  --border: #45475A;
-  --accent: #89B4FA;
-  --accent-hover: #74C7EC;
-  --success: #A6E3A1;
-  --warning: #F9E2AF;
-  --danger: #F38BA8;
-  --gutter-bg: #181825;
-  --gutter-text: #6C7086;
-  --scrollbar-track: #1E1E2E;
-  --scrollbar-thumb: #45475A;
-  /* Syntax colors (VS Code Dark+ inspired) */
-  --syn-keyword: #C678DD;
-  --syn-function: #61AFEF;
-  --syn-string: #98C379;
-  --syn-number: #D19A66;
-  --syn-comment: #6C7086;
-  --syn-operator: #56B6C2;
-  --syn-sfmc: #E5C07B;
-  --syn-dataview: #F38BA8;
-  --syn-paren: #CDD6F4;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#1E1E2E;--surface:#282A36;--surface2:#313244;--border:#44475A;
+--text:#F8F8F2;--text-muted:#6272A4;--accent:#BD93F9;
+--kw:#FF79C6;--fn:#8BE9FD;--sfmc-fn:#FFB86C;--dv:#50FA7B;
+--str:#F1FA8C;--num:#BD93F9;--cmt:#6272A4;--op:#FF5555;
+--bracket:#F8F8F2;--ident:#F8F8F2;--line-num:#6272A4;
+--btn-hover:rgba(255,255,255,0.08);--btn-active:rgba(255,255,255,0.12);
+--scrollbar:#44475A;--scrollbar-hover:#6272A4;
+--caret-color:#F8F8F2;--selection:rgba(189,147,249,0.3);
+--panel-bg:#21222C;--card-bg:#2B2D3A;--card-hover:#343648;
+--success:#50FA7B;--warning:#FFB86C;--danger:#FF5555;--info:#8BE9FD;
 }
-
-[data-theme="light"] {
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F5F5F7;
-  --bg-tertiary: #E8E8ED;
-  --bg-surface: #EAEAEF;
-  --bg-hover: #D8D8DD;
-  --text-primary: #1B1B1F;
-  --text-secondary: #44475A;
-  --text-muted: #888;
-  --border: #D0D0D5;
-  --accent: #0070D2;
-  --accent-hover: #005FB2;
-  --success: #2E844A;
-  --warning: #DD7A01;
-  --danger: #C23934;
-  --gutter-bg: #F0F0F5;
-  --gutter-text: #999;
-  --scrollbar-track: #F5F5F7;
-  --scrollbar-thumb: #C0C0C5;
-  --syn-keyword: #AF00DB;
-  --syn-function: #0070C1;
-  --syn-string: #098658;
-  --syn-number: #B5CEA8;
-  --syn-comment: #6A9955;
-  --syn-operator: #0070C1;
-  --syn-sfmc: #795E26;
-  --syn-dataview: #C23934;
-  --syn-paren: #1B1B1F;
+[data-theme="light"]{
+--bg:#F5F5F5;--surface:#FFFFFF;--surface2:#E8E8E8;--border:#D0D0D0;
+--text:#1E1E1E;--text-muted:#6A737D;--accent:#6F42C1;
+--kw:#0000FF;--fn:#795E26;--sfmc-fn:#AF00DB;--dv:#267F99;
+--str:#A31515;--num:#098658;--cmt:#008000;--op:#000000;
+--bracket:#1E1E1E;--ident:#1E1E1E;--line-num:#999999;
+--btn-hover:rgba(0,0,0,0.06);--btn-active:rgba(0,0,0,0.1);
+--scrollbar:#C0C0C0;--scrollbar-hover:#999;
+--caret-color:#1E1E1E;--selection:rgba(0,0,255,0.15);
+--panel-bg:#EBEBEB;--card-bg:#FFFFFF;--card-hover:#F0F0F0;
+--success:#22863A;--warning:#B08800;--danger:#D73A49;--info:#005CC5;
 }
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: background 0.3s, color 0.3s;
-}
-
-/* ─── Scrollbar ─── */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-/* ─── Toolbar ─── */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.toolbar-separator {
-  width: 1px;
-  height: 24px;
-  background: var(--border);
-  margin: 0 6px;
-}
-
-.toolbar-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent);
-  margin-right: 12px;
-  white-space: nowrap;
-}
-
-.toolbar-title span { color: var(--text-muted); font-weight: 400; }
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  font-family: inherit;
-}
-
-.btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.btn:active { transform: scale(0.97); }
-.btn svg { width: 14px; height: 14px; flex-shrink: 0; }
-.btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-/* ─── Main Layout ─── */
-.main-container {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* ─── Editor Panel ─── */
-.editor-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 300px;
-  overflow: hidden;
-}
-
-.editor-wrapper {
-  flex: 1;
-  display: flex;
-  position: relative;
-  overflow: hidden;
-}
-
-.line-numbers {
-  width: 50px;
-  background: var(--gutter-bg);
-  color: var(--gutter-text);
-  font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  padding: 10px 8px 10px 0;
-  text-align: right;
-  overflow: hidden;
-  user-select: none;
-  border-right: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.line-numbers div {
-  height: 19.5px;
-}
-
-.editor-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.editor-highlight, .editor-textarea {
-  font-family: 'Menlo', 'Consolas', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  padding: 10px;
-  margin: 0;
-  border: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  white-space: pre;
-  overflow: auto;
-  tab-size: 2;
-}
-
-.editor-highlight {
-  pointer-events: none;
-  z-index: 1;
-  color: var(--text-primary);
-  background: transparent;
-  word-wrap: normal;
-}
-
-.editor-textarea {
-  z-index: 2;
-  color: transparent;
-  caret-color: var(--text-primary);
-  background: var(--bg-primary);
-  resize: none;
-  outline: none;
-  -webkit-text-fill-color: transparent;
-  word-wrap: normal;
-}
-
-.editor-textarea::selection {
-  background: rgba(137, 180, 250, 0.3);
-  -webkit-text-fill-color: transparent;
-}
-
-/* Syntax classes */
-.syn-keyword { color: var(--syn-keyword); font-weight: 600; }
-.syn-function { color: var(--syn-function); }
-.syn-string { color: var(--syn-string); }
-.syn-number { color: var(--syn-number); }
-.syn-comment { color: var(--syn-comment); font-style: italic; }
-.syn-operator { color: var(--syn-operator); }
-.syn-sfmc { color: var(--syn-sfmc); font-weight: 600; }
-.syn-dataview { color: var(--syn-dataview); font-weight: 600; }
-.syn-paren { color: var(--syn-paren); }
-
-/* ─── Side Panel ─── */
-.side-panel {
-  width: 340px;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: width 0.3s ease, opacity 0.3s ease;
-  flex-shrink: 0;
-}
-
-.side-panel.collapsed {
-  width: 0;
-  border-left: none;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.side-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.side-tab {
-  flex: 1;
-  padding: 8px 4px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--text-muted);
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-}
-
-.side-tab:hover { color: var(--text-secondary); }
-.side-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-.side-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.side-section { display: none; }
-.side-section.active { display: block; }
-
-/* Template cards */
-.template-card {
-  padding: 10px;
-  margin-bottom: 8px;
-  background: var(--bg-surface);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  border: 1px solid transparent;
-}
-
-.template-card:hover { border-color: var(--accent); background: var(--bg-hover); }
-.template-card h4 { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
-.template-card p { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
-
-/* Data view reference */
-.dv-group {
-  margin-bottom: 10px;
-}
-
-.dv-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  background: var(--bg-surface);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--syn-dataview);
-  transition: all 0.15s;
-}
-
-.dv-header:hover { background: var(--bg-hover); }
-.dv-header .arrow { transition: transform 0.2s; font-size: 10px; color: var(--text-muted); }
-.dv-header.open .arrow { transform: rotate(90deg); }
-
-.dv-fields {
-  display: none;
-  padding: 6px 10px 6px 20px;
-}
-
-.dv-fields.open { display: block; }
-
-.dv-field {
-  font-family: 'Menlo', 'Consolas', monospace;
-  font-size: 11px;
-  color: var(--text-secondary);
-  padding: 2px 0;
-  cursor: pointer;
-}
-
-.dv-field:hover { color: var(--accent); }
-
-/* Snippets & History */
-.snippet-item, .history-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
-  margin-bottom: 4px;
-  background: var(--bg-surface);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-size: 12px;
-}
-
-.snippet-item:hover, .history-item:hover { background: var(--bg-hover); }
-
-.snippet-name, .history-time {
-  color: var(--text-primary);
-  font-weight: 500;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.history-preview {
-  color: var(--text-muted);
-  font-size: 11px;
-  font-family: 'Menlo', 'Consolas', monospace;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
-}
-
-.snippet-delete, .history-delete {
-  background: none;
-  border: none;
-  color: var(--danger);
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0 4px;
-  opacity: 0.5;
-  transition: opacity 0.15s;
-}
-
-.snippet-delete:hover, .history-delete:hover { opacity: 1; }
-
-.empty-state {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 12px;
-  padding: 30px 10px;
-}
-
-/* ─── Find & Replace Bar ─── */
-.find-bar {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
-}
-
-.find-bar.open { display: flex; }
-
-.find-bar input {
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 12px;
-  font-family: inherit;
-  outline: none;
-  width: 180px;
-}
-
-.find-bar input:focus { border-color: var(--accent); }
-.find-bar label { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
-.find-count { font-size: 11px; color: var(--text-muted); min-width: 60px; }
-
-/* ─── Status Bar ─── */
-.status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 3px 12px;
-  background: var(--bg-tertiary);
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.status-group {
-  display: flex;
-  gap: 16px;
-}
-
-.status-item { white-space: nowrap; }
-
-/* ─── Toast ─── */
-.toast-container {
-  position: fixed;
-  bottom: 40px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.toast {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.toast.success { background: var(--success); color: #1E1E2E; }
-.toast.info { background: var(--accent); color: #1E1E2E; }
-.toast.warning { background: var(--warning); color: #1E1E2E; }
-.toast.error { background: var(--danger); color: #fff; }
-
-@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
-
-/* ─── Modal ─── */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-overlay.open { display: flex; }
-
-.modal {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 20px;
-  min-width: 350px;
-  max-width: 450px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-}
-
-.modal h3 { font-size: 15px; margin-bottom: 12px; color: var(--text-primary); }
-
-.modal input[type="text"] {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  margin-bottom: 12px;
-}
-
-.modal input[type="text"]:focus { border-color: var(--accent); }
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.modal-actions .btn { padding: 6px 16px; }
-.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-primary:hover { background: var(--accent-hover); }
-
-/* ─── Responsive ─── */
-@media (max-width: 768px) {
-  .side-panel { width: 280px; }
-  .toolbar { padding: 4px 8px; }
-  .btn span.label { display: none; }
-}
-
-@media (max-width: 600px) {
-  .side-panel { position: fixed; right: 0; top: 0; bottom: 0; z-index: 100; width: 300px; box-shadow: -4px 0 20px rgba(0,0,0,0.3); }
-  .side-panel.collapsed { width: 0; }
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
+body{display:flex;flex-direction:column;overflow:hidden}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-hover)}
+
+/* Header */
+.header{display:flex;align-items:center;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);gap:12px;flex-shrink:0;min-height:48px}
+.logo{font-size:16px;font-weight:700;color:var(--accent);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.logo svg{width:20px;height:20px}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:2px;flex-wrap:wrap;flex:1}
+.tb-sep{width:1px;height:24px;background:var(--border);margin:0 6px;flex-shrink:0}
+.tb-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:none;background:transparent;color:var(--text);font-size:12px;border-radius:4px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.tb-btn:hover{background:var(--btn-hover)}
+.tb-btn:active{background:var(--btn-active)}
+.tb-btn svg{width:14px;height:14px;flex-shrink:0}
+.tb-btn.active{background:var(--btn-active);color:var(--accent)}
+
+/* Main Layout */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* Side Panel */
+.side-panel{width:320px;background:var(--panel-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:width .2s}
+.side-panel.collapsed{width:0;border:none}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
+.panel-tab:hover{color:var(--text);background:var(--btn-hover)}
+.panel-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel-content{flex:1;overflow-y:auto;padding:8px}
+.panel-section{display:none}
+.panel-section.active{display:block}
+
+/* Search Input */
+.panel-search{width:100%;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;margin-bottom:8px;outline:none}
+.panel-search:focus{border-color:var(--accent)}
+.panel-search::placeholder{color:var(--text-muted)}
+
+/* Template Cards */
+.tpl-card{padding:10px 12px;background:var(--card-bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.tpl-card:hover{background:var(--card-hover);border-color:var(--accent);transform:translateX(2px)}
+.tpl-card h4{font-size:12px;font-weight:600;margin-bottom:3px;color:var(--text)}
+.tpl-card p{font-size:11px;color:var(--text-muted);line-height:1.4}
+
+/* Snippets */
+.snippet-item{display:flex;align-items:center;padding:8px 10px;background:var(--card-bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .15s;gap:8px}
+.snippet-item:hover{background:var(--card-hover);border-color:var(--accent)}
+.snippet-item .sn-name{flex:1;font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snippet-item .sn-date{font-size:10px;color:var(--text-muted);white-space:nowrap}
+.snippet-item .sn-del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:3px;opacity:.6;transition:opacity .15s}
+.snippet-item .sn-del:hover{opacity:1}
+
+/* Data Views Accordion */
+.dv-group{margin-bottom:4px}
+.dv-header{padding:8px 10px;background:var(--card-bg);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;color:var(--dv);display:flex;align-items:center;justify-content:space-between;transition:all .15s}
+.dv-header:hover{background:var(--card-hover)}
+.dv-header .arrow{transition:transform .2s;font-size:10px;color:var(--text-muted)}
+.dv-group.open .dv-header .arrow{transform:rotate(90deg)}
+.dv-fields{display:none;padding:4px 0 4px 12px}
+.dv-group.open .dv-fields{display:block}
+.dv-field{padding:4px 8px;font-size:11px;cursor:pointer;border-radius:3px;display:flex;align-items:center;gap:6px;transition:background .1s}
+.dv-field:hover{background:var(--btn-hover)}
+.dv-field .f-name{color:var(--text);font-weight:500}
+.dv-field .f-type{color:var(--text-muted);font-size:10px}
+
+/* History */
+.hist-item{padding:8px 10px;background:var(--card-bg);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.hist-item:hover{background:var(--card-hover);border-color:var(--accent)}
+.hist-item .h-preview{font-size:11px;color:var(--text);font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.hist-item .h-time{font-size:10px;color:var(--text-muted)}
+
+/* Editor Area */
+.editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* Editor Container */
+.editor-wrap{flex:1;position:relative;overflow:hidden;background:var(--surface)}
+.line-numbers{position:absolute;left:0;top:0;bottom:0;width:48px;background:var(--surface);border-right:1px solid var(--border);padding:12px 8px 12px 0;text-align:right;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;line-height:1.6;color:var(--line-num);overflow:hidden;z-index:2;user-select:none;pointer-events:none}
+.editor-scroll{position:absolute;left:48px;top:0;right:0;bottom:0;overflow:auto}
+.highlight-layer{position:absolute;top:0;left:0;right:0;padding:12px 16px;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;color:var(--text);pointer-events:none;min-height:100%}
+.editor-textarea{position:absolute;top:0;left:0;width:100%;height:100%;padding:12px 16px;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:13px;line-height:1.6;color:transparent;caret-color:var(--caret-color);background:transparent;border:none;outline:none;resize:none;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;z-index:1;tab-size:4;-moz-tab-size:4}
+.editor-textarea::selection{background:var(--selection)}
+
+/* Syntax Colors */
+.syn-keyword{color:var(--kw);font-weight:600}
+.syn-function{color:var(--fn)}
+.syn-sfmc-function{color:var(--sfmc-fn)}
+.syn-dataview{color:var(--dv)}
+.syn-string{color:var(--str)}
+.syn-number{color:var(--num)}
+.syn-comment{color:var(--cmt);font-style:italic}
+.syn-operator{color:var(--op)}
+.syn-bracket{color:var(--bracket)}
+.syn-identifier{color:var(--ident)}
+
+/* Status Bar */
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:4px 16px;background:var(--surface);border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);flex-shrink:0;min-height:28px;gap:12px}
+.status-left,.status-right{display:flex;align-items:center;gap:12px}
+.status-badge{padding:1px 8px;background:var(--accent);color:#fff;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.5px}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:2px 8px;border-radius:3px;font-size:11px;transition:all .15s}
+.theme-toggle:hover{color:var(--text);border-color:var(--text-muted)}
+
+/* Find & Replace */
+.find-bar{display:none;padding:6px 12px;background:var(--surface2);border-bottom:1px solid var(--border);gap:8px;align-items:center;flex-shrink:0}
+.find-bar.visible{display:flex}
+.find-bar input{padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:12px;outline:none;width:200px}
+.find-bar input:focus{border-color:var(--accent)}
+.find-bar button{padding:4px 10px;background:var(--btn-hover);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;cursor:pointer}
+.find-bar button:hover{background:var(--btn-active)}
+.find-bar .find-close{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:0 4px}
+.find-bar .find-count{font-size:11px;color:var(--text-muted);min-width:60px}
+
+/* Save Dialog */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.visible{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;width:360px;max-width:90vw}
+.modal h3{margin-bottom:12px;font-size:14px}
+.modal input{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px}
+.modal input:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal-btns button{padding:6px 16px;border-radius:4px;border:1px solid var(--border);cursor:pointer;font-size:12px}
+.modal-btns .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.modal-btns .btn-cancel{background:transparent;color:var(--text)}
+
+/* Toast */
+.toast{position:fixed;bottom:48px;right:16px;padding:10px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);z-index:200;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.visible{opacity:1;transform:translateY(0)}
+.toast.success{border-color:var(--success);color:var(--success)}
+.toast.error{border-color:var(--danger);color:var(--danger)}
+
+/* Responsive */
+@media(max-width:768px){
+.side-panel{position:absolute;z-index:50;height:100%;width:280px !important;left:0;top:0}
+.side-panel.collapsed{width:0 !important}
+.tb-btn span{display:none}
+.header{padding:8px}
 }
 </style>
 </head>
 <body>
 
-<!-- Toolbar -->
-<div class="toolbar">
-  <div class="toolbar-title">⚡ Query Studio Pro <span>v1.0</span></div>
-  <div class="toolbar-group">
-    <button class="btn" id="btnFormat" title="Format SQL (Ctrl+Shift+F)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
-      <span class="label">Format</span>
+<!-- Header & Toolbar -->
+<div class="header">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+    SFMC Query Studio Pro
+  </div>
+  <div class="toolbar">
+    <button class="tb-btn" onclick="togglePanel()" title="Toggle Panel (Ctrl+B)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      <span>Panel</span>
     </button>
-    <button class="btn" id="btnCopy" title="Copy to Clipboard (Ctrl+Shift+C)">
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="formatSQL()" title="Format SQL (Ctrl+Shift+F)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h14"/></svg>
+      <span>Format</span>
+    </button>
+    <button class="tb-btn" onclick="copyToClipboard()" title="Copy (Ctrl+C)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-      <span class="label">Copy</span>
+      <span>Copy</span>
     </button>
-  </div>
-  <div class="toolbar-separator"></div>
-  <div class="toolbar-group">
-    <button class="btn" id="btnSaveSnippet" title="Save Snippet (Ctrl+S)">
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="showSaveDialog()" title="Save Snippet (Ctrl+S)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
-      <span class="label">Save</span>
+      <span>Save</span>
     </button>
-    <button class="btn" id="btnExport" title="Export .sql">
+    <button class="tb-btn" onclick="exportSQL()" title="Export .sql">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span class="label">Export</span>
+      <span>Export</span>
     </button>
-    <button class="btn" id="btnImport" title="Import .sql">
+    <button class="tb-btn" onclick="importSQL()" title="Import .sql">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <span class="label">Import</span>
+      <span>Import</span>
     </button>
-    <input type="file" id="fileImport" accept=".sql,.txt" style="display:none">
-  </div>
-  <div class="toolbar-separator"></div>
-  <div class="toolbar-group">
-    <button class="btn" id="btnFind" title="Find & Replace (Ctrl+F)">
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="toggleFind()" title="Find & Replace (Ctrl+F)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span class="label">Find</span>
+      <span>Find</span>
     </button>
-  </div>
-  <div style="flex:1"></div>
-  <div class="toolbar-group">
-    <button class="btn" id="btnTheme" title="Toggle Theme">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-    </button>
-    <button class="btn" id="btnPanel" title="Toggle Side Panel">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+    <button class="tb-btn" onclick="clearEditor()" title="Clear">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      <span>Clear</span>
     </button>
   </div>
 </div>
 
-<!-- Find Bar -->
+<!-- Find & Replace Bar -->
 <div class="find-bar" id="findBar">
-  <input type="text" id="findInput" placeholder="Find...">
+  <input type="text" id="findInput" placeholder="Find..." oninput="doFind()">
   <input type="text" id="replaceInput" placeholder="Replace...">
-  <button class="btn" id="btnFindNext" title="Find Next">▼</button>
-  <button class="btn" id="btnFindPrev" title="Find Previous">▲</button>
-  <button class="btn" id="btnReplaceOne">Replace</button>
-  <button class="btn" id="btnReplaceAll">All</button>
+  <button onclick="doReplace()">Replace</button>
+  <button onclick="doReplaceAll()">All</button>
   <span class="find-count" id="findCount"></span>
-  <button class="btn" id="btnFindClose" title="Close">✕</button>
+  <button class="find-close" onclick="toggleFind()">&times;</button>
 </div>
 
-<!-- Main Container -->
-<div class="main-container">
-  <!-- Editor -->
-  <div class="editor-panel">
-    <div class="editor-wrapper">
-      <div class="line-numbers" id="lineNumbers"></div>
-      <div class="editor-container">
-        <pre class="editor-highlight" id="highlight" aria-hidden="true"></pre>
-        <textarea class="editor-textarea" id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="-- Write your SFMC SQL query here...&#10;SELECT TOP 100&#10;  s.SubscriberKey,&#10;  s.EmailAddress&#10;FROM _Subscribers s"></textarea>
+<!-- Main Content -->
+<div class="main">
+  <!-- Side Panel -->
+  <div class="side-panel" id="sidePanel">
+    <div class="panel-tabs">
+      <div class="panel-tab active" onclick="switchPanelTab('templates')">Templates</div>
+      <div class="panel-tab" onclick="switchPanelTab('snippets')">Snippets</div>
+      <div class="panel-tab" onclick="switchPanelTab('dataviews')">Data Views</div>
+      <div class="panel-tab" onclick="switchPanelTab('history')">History</div>
+    </div>
+    <div class="panel-content">
+      <div class="panel-section active" id="sec-templates">
+        <input class="panel-search" id="tplSearch" placeholder="Search templates..." oninput="filterTemplates()">
+        <div id="tplList"></div>
+      </div>
+      <div class="panel-section" id="sec-snippets">
+        <div id="snippetList"></div>
+      </div>
+      <div class="panel-section" id="sec-dataviews">
+        <input class="panel-search" id="dvSearch" placeholder="Search data views..." oninput="filterDataViews()">
+        <div id="dvList"></div>
+      </div>
+      <div class="panel-section" id="sec-history">
+        <div id="histList"></div>
       </div>
     </div>
   </div>
 
-  <!-- Side Panel -->
-  <div class="side-panel" id="sidePanel">
-    <div class="side-tabs">
-      <button class="side-tab active" data-tab="templates">📋 Templates</button>
-      <button class="side-tab" data-tab="reference">📖 Reference</button>
-      <button class="side-tab" data-tab="snippets">💾 Snippets</button>
-      <button class="side-tab" data-tab="history">📜 History</button>
-    </div>
-    <div class="side-content">
-      <div class="side-section active" id="sec-templates"></div>
-      <div class="side-section" id="sec-reference"></div>
-      <div class="side-section" id="sec-snippets"></div>
-      <div class="side-section" id="sec-history"></div>
+  <!-- Editor -->
+  <div class="editor-area">
+    <div class="editor-wrap">
+      <div class="line-numbers" id="lineNumbers"></div>
+      <div class="editor-scroll" id="editorScroll">
+        <div class="highlight-layer" id="highlightLayer"></div>
+        <textarea class="editor-textarea" id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Status Bar -->
 <div class="status-bar">
-  <div class="status-group">
-    <span class="status-item" id="statusLines">Lines: 0</span>
-    <span class="status-item" id="statusChars">Chars: 0</span>
-    <span class="status-item" id="statusCursor">Ln 1, Col 1</span>
+  <div class="status-left">
+    <span id="statusLines">Ln 1</span>
+    <span id="statusCol">Col 1</span>
+    <span id="statusChars">0 chars</span>
+    <span id="statusLineCount">1 line</span>
   </div>
-  <div class="status-group">
-    <span class="status-item">SFMC SQL</span>
-    <span class="status-item" id="statusTheme">● Dark</span>
+  <div class="status-right">
+    <span class="status-badge">SFMC SQL</span>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">&#9790; Dark</button>
   </div>
 </div>
 
-<!-- Save Snippet Modal -->
+<!-- Save Modal -->
 <div class="modal-overlay" id="saveModal">
   <div class="modal">
-    <h3>💾 Save Snippet</h3>
-    <input type="text" id="snippetNameInput" placeholder="Snippet name...">
-    <div class="modal-actions">
-      <button class="btn" id="btnCancelSave">Cancel</button>
-      <button class="btn btn-primary" id="btnConfirmSave">Save</button>
+    <h3>Save Snippet</h3>
+    <input type="text" id="snippetName" placeholder="Snippet name..." autofocus>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeSaveDialog()">Cancel</button>
+      <button class="btn-primary" onclick="saveSnippet()">Save</button>
     </div>
   </div>
 </div>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toasts"></div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" accept=".sql,.txt" style="display:none" onchange="handleImport(event)">
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   SFMC Query Studio Pro — JavaScript
-   ═══════════════════════════════════════════════════════════════ */
+// ============================================================
+// DATA: SQL Keywords, Functions, SFMC specifics
+// ============================================================
+const SQL_KEYWORDS = [
+  'SELECT','FROM','WHERE','AND','OR','NOT','IN','EXISTS','BETWEEN','LIKE',
+  'IS','NULL','AS','ON','JOIN','INNER','LEFT','RIGHT','OUTER','FULL','CROSS',
+  'GROUP','BY','ORDER','HAVING','UNION','ALL','DISTINCT','TOP','INSERT','INTO',
+  'UPDATE','SET','DELETE','CREATE','TABLE','ALTER','DROP','INDEX','VALUES',
+  'CASE','WHEN','THEN','ELSE','END','ASC','DESC','LIMIT','OFFSET','WITH',
+  'OVER','PARTITION','ROW_NUMBER','RANK','DENSE_RANK','ROWS','RANGE',
+  'PRECEDING','FOLLOWING','UNBOUNDED','CURRENT','ROW','PERCENT','EXCEPT',
+  'INTERSECT','DECLARE','BEGIN','RETURN','EXEC','EXECUTE','IF','WHILE',
+  'BREAK','CONTINUE','GOTO','PRINT','RAISERROR','TRY','CATCH','THROW',
+  'MERGE','USING','MATCHED','OUTPUT','INSERTED','DELETED','PIVOT','UNPIVOT',
+  'FETCH','NEXT','FIRST','LAST','ABSOLUTE','RELATIVE','OPEN','CLOSE',
+  'DEALLOCATE','CURSOR','FOR','READONLY','IDENTITY','CONSTRAINT','PRIMARY',
+  'KEY','FOREIGN','REFERENCES','CHECK','DEFAULT','UNIQUE','CLUSTERED',
+  'NONCLUSTERED','NOLOCK','HOLDLOCK','ROWLOCK','TABLOCK','VARCHAR','NVARCHAR',
+  'INT','BIGINT','SMALLINT','TINYINT','BIT','DECIMAL','NUMERIC','FLOAT',
+  'REAL','DATETIME','DATE','TIME','CHAR','NCHAR','TEXT','NTEXT','IMAGE',
+  'MONEY','SMALLMONEY','XML','VARBINARY','BINARY','TIMESTAMP','UNIQUEIDENTIFIER'
+];
 
-(function() {
-'use strict';
+const SQL_FUNCTIONS = [
+  'COUNT','SUM','AVG','MIN','MAX','COALESCE','ISNULL','NULLIF','IIF',
+  'LEN','TRIM','LTRIM','RTRIM','UPPER','LOWER','SUBSTRING','REPLACE',
+  'CHARINDEX','PATINDEX','STUFF','REVERSE','LEFT','RIGHT','REPLICATE',
+  'SPACE','STR','FORMAT','CONCAT','CONCAT_WS','STRING_AGG',
+  'CAST','CONVERT','TRY_CAST','TRY_CONVERT',
+  'ABS','CEILING','FLOOR','ROUND','POWER','SQRT','SIGN','LOG','LOG10','EXP',
+  'RAND','NEWID','CHECKSUM','HASHBYTES',
+  'YEAR','MONTH','DAY','HOUR','MINUTE','SECOND',
+  'DATEDIFF','DATEPART','DATENAME','EOMONTH','DATEFROMPARTS','ISDATE',
+  'SWITCHOFFSET','TODATETIMEOFFSET','SYSDATETIME','SYSUTCDATETIME',
+  'ROW_NUMBER','RANK','DENSE_RANK','NTILE','LAG','LEAD',
+  'FIRST_VALUE','LAST_VALUE','PERCENT_RANK','CUME_DIST',
+  'OBJECT_ID','OBJECT_NAME','SCOPE_IDENTITY','IDENT_CURRENT',
+  'ERROR_MESSAGE','ERROR_NUMBER','ERROR_SEVERITY','ERROR_STATE',
+  'QUOTENAME','PARSENAME','SCHEMA_NAME','DB_NAME'
+];
 
-// ─── Elements ───
+const SFMC_FUNCTIONS = [
+  'DATEADD','GETDATE','GETUTCDATE','SYSDATETIMEOFFSET',
+  'HASHBYTES','NEWID','CONVERT','CAST',
+  'FORMAT','IIF','CHOOSE','COALESCE','ISNULL'
+];
+
+const SFMC_DATA_VIEWS = [
+  '_SUBSCRIBERS','_LISTSUBSCRIBERS','_ENTERPRISEATTRIBUTE',
+  '_SENT','_OPEN','_CLICK','_BOUNCE','_UNSUBSCRIBE','_COMPLAINT',
+  '_JOB','_JOURNEY','_JOURNEYACTIVITY','_SMSMESSAGETRACKING',
+  '_SOCIALNETWORKTRACKING','_SOCIALNETWORKIMPRESSIONS',
+  '_BUSINESSUNITUNSUBSCRIBES','_FTAF','_SURVEYRESPONSE',
+  '_AUTOMATIONACTIVITYINSTANCE','_AUTOMATIONINSTANCE',
+  '_PUSHADDRESS','_PUSHTAG','_MOBILEADDRESS','_MOBILESUBSCRIPTION',
+  '_SMSMTLOG','_IMPORT','_IMPORTSUBSCRIBERSRESULTS'
+];
+
+// ============================================================
+// TOKENIZER-BASED SYNTAX HIGHLIGHTER
+// ============================================================
+function tokenizeSQL(text) {
+  const tokens = [];
+  let i = 0;
+  while (i < text.length) {
+    // Single-line comment
+    if (text[i] === '-' && text[i+1] === '-') {
+      let end = text.indexOf('\n', i);
+      if (end === -1) end = text.length;
+      tokens.push({ type: 'comment', value: text.substring(i, end) });
+      i = end;
+      continue;
+    }
+    // Multi-line comment
+    if (text[i] === '/' && text[i+1] === '*') {
+      let end = text.indexOf('*/', i + 2);
+      if (end === -1) end = text.length; else end += 2;
+      tokens.push({ type: 'comment', value: text.substring(i, end) });
+      i = end;
+      continue;
+    }
+    // String literal
+    if (text[i] === "'") {
+      let end = i + 1;
+      while (end < text.length) {
+        if (text[end] === "'" && text[end+1] === "'") { end += 2; continue; }
+        if (text[end] === "'") { end++; break; }
+        end++;
+      }
+      tokens.push({ type: 'string', value: text.substring(i, end) });
+      i = end;
+      continue;
+    }
+    // Number
+    if (/\d/.test(text[i])) {
+      let end = i;
+      while (end < text.length && /[\d.]/.test(text[end])) end++;
+      tokens.push({ type: 'number', value: text.substring(i, end) });
+      i = end;
+      continue;
+    }
+    // Word (keyword / function / identifier)
+    if (/[a-zA-Z_]/.test(text[i])) {
+      let end = i;
+      while (end < text.length && /[a-zA-Z0-9_]/.test(text[end])) end++;
+      const word = text.substring(i, end);
+      const upper = word.toUpperCase();
+      if (SQL_KEYWORDS.includes(upper)) {
+        tokens.push({ type: 'keyword', value: word });
+      } else if (SFMC_FUNCTIONS.includes(upper)) {
+        tokens.push({ type: 'sfmc-function', value: word });
+      } else if (SQL_FUNCTIONS.includes(upper)) {
+        tokens.push({ type: 'function', value: word });
+      } else if (upper.startsWith('_') || SFMC_DATA_VIEWS.includes(upper)) {
+        tokens.push({ type: 'dataview', value: word });
+      } else {
+        tokens.push({ type: 'identifier', value: word });
+      }
+      i = end;
+      continue;
+    }
+    // Operators
+    if (/[=<>!+\-*/%&|^~]/.test(text[i])) {
+      tokens.push({ type: 'operator', value: text[i] });
+      i++;
+      continue;
+    }
+    // Brackets
+    if (/[()[\]]/.test(text[i])) {
+      tokens.push({ type: 'bracket', value: text[i] });
+      i++;
+      continue;
+    }
+    // Everything else
+    tokens.push({ type: 'plain', value: text[i] });
+    i++;
+  }
+  return tokens;
+}
+
+function escapeHTML(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function highlightSQL(text) {
+  const tokens = tokenizeSQL(text);
+  return tokens.map(t => {
+    const escaped = escapeHTML(t.value);
+    if (t.type === 'plain') return escaped;
+    return '<span class="syn-' + t.type + '">' + escaped + '</span>';
+  }).join('');
+}
+
+// ============================================================
+// EDITOR CORE
+// ============================================================
 const editor = document.getElementById('editor');
-const highlight = document.getElementById('highlight');
+const highlightLayer = document.getElementById('highlightLayer');
 const lineNumbers = document.getElementById('lineNumbers');
-const sidePanel = document.getElementById('sidePanel');
-const findBar = document.getElementById('findBar');
-const findInput = document.getElementById('findInput');
-const replaceInput = document.getElementById('replaceInput');
+const editorScroll = document.getElementById('editorScroll');
 
-// ─── Templates ───
-const TEMPLATES = [
-  {
-    name: 'Deduplicate Subscribers by Email',
-    desc: 'Remove duplicate emails, keeping the most recent subscriber record.',
-    sql: `SELECT TOP 0\n  s.SubscriberKey,\n  s.EmailAddress,\n  s.Status,\n  s.DateJoined\nFROM (\n  SELECT\n    SubscriberKey,\n    EmailAddress,\n    Status,\n    DateJoined,\n    ROW_NUMBER() OVER (\n      PARTITION BY EmailAddress\n      ORDER BY DateJoined DESC\n    ) AS rn\n  FROM _Subscribers\n) s\nWHERE s.rn = 1`
-  },
-  {
-    name: 'Subscribers Opened in Last 30 Days',
-    desc: 'Find subscribers who opened an email within the last 30 days.',
-    sql: `SELECT DISTINCT\n  o.SubscriberKey,\n  s.EmailAddress,\n  MAX(o.EventDate) AS LastOpenDate,\n  COUNT(*) AS OpenCount\nFROM _Open o\nINNER JOIN _Subscribers s\n  ON o.SubscriberKey = s.SubscriberKey\nWHERE o.EventDate >= DATEADD(day, -30, GETDATE())\nGROUP BY o.SubscriberKey, s.EmailAddress`
-  },
-  {
-    name: 'Clicked but Didn\'t Convert',
-    desc: 'Subscribers who clicked a link but did not appear in a conversion DE.',
-    sql: `SELECT\n  c.SubscriberKey,\n  s.EmailAddress,\n  c.EventDate AS ClickDate,\n  c.URL,\n  c.LinkName\nFROM _Click c\nINNER JOIN _Subscribers s\n  ON c.SubscriberKey = s.SubscriberKey\nLEFT JOIN [ConversionDE] conv\n  ON c.SubscriberKey = conv.SubscriberKey\nWHERE conv.SubscriberKey IS NULL\n  AND c.EventDate >= DATEADD(day, -30, GETDATE())`
-  },
-  {
-    name: 'Join Subscribers with Data Extension',
-    desc: 'Combine subscriber data with a custom data extension.',
-    sql: `SELECT\n  s.SubscriberKey,\n  s.EmailAddress,\n  s.Status,\n  de.FirstName,\n  de.LastName,\n  de.CustomField\nFROM _Subscribers s\nINNER JOIN [YourDataExtension] de\n  ON s.SubscriberKey = de.SubscriberKey\nWHERE s.Status = 'active'`
-  },
-  {
-    name: 'Engagement Scoring',
-    desc: 'Score subscribers based on open and click activity.',
-    sql: `SELECT\n  s.SubscriberKey,\n  s.EmailAddress,\n  ISNULL(opens.OpenCount, 0) AS Opens,\n  ISNULL(clicks.ClickCount, 0) AS Clicks,\n  (\n    ISNULL(opens.OpenCount, 0) * 1\n    + ISNULL(clicks.ClickCount, 0) * 3\n  ) AS EngagementScore\nFROM _Subscribers s\nLEFT JOIN (\n  SELECT SubscriberKey, COUNT(*) AS OpenCount\n  FROM _Open\n  WHERE EventDate >= DATEADD(day, -90, GETDATE())\n  GROUP BY SubscriberKey\n) opens ON s.SubscriberKey = opens.SubscriberKey\nLEFT JOIN (\n  SELECT SubscriberKey, COUNT(*) AS ClickCount\n  FROM _Click\n  WHERE EventDate >= DATEADD(day, -90, GETDATE())\n  GROUP BY SubscriberKey\n) clicks ON s.SubscriberKey = clicks.SubscriberKey`
-  },
-  {
-    name: 'Bounce Analysis',
-    desc: 'Analyze bounce types and frequency for recent sends.',
-    sql: `SELECT\n  b.SubscriberKey,\n  s.EmailAddress,\n  b.BounceCategory,\n  b.BounceSubcategory,\n  b.SMTPBounceReason,\n  b.SMTPCode,\n  b.EventDate,\n  j.EmailName\nFROM _Bounce b\nINNER JOIN _Subscribers s\n  ON b.SubscriberKey = s.SubscriberKey\nLEFT JOIN _Job j\n  ON b.JobID = j.JobID\nWHERE b.EventDate >= DATEADD(day, -30, GETDATE())\nORDER BY b.EventDate DESC`
-  },
-  {
-    name: 'Unsubscribe Trend Analysis',
-    desc: 'Track unsubscribe trends over time by week.',
-    sql: `SELECT\n  DATEPART(year, u.EventDate) AS UnsubYear,\n  DATEPART(week, u.EventDate) AS UnsubWeek,\n  COUNT(*) AS UnsubscribeCount,\n  COUNT(DISTINCT u.SubscriberKey) AS UniqueUnsubs\nFROM _Unsubscribe u\nWHERE u.EventDate >= DATEADD(month, -6, GETDATE())\nGROUP BY\n  DATEPART(year, u.EventDate),\n  DATEPART(week, u.EventDate)\nORDER BY UnsubYear DESC, UnsubWeek DESC`
-  },
-  {
-    name: 'Journey Entry Audience',
-    desc: 'Build an audience segment for journey entry based on engagement.',
-    sql: `SELECT\n  s.SubscriberKey,\n  s.EmailAddress,\n  de.FirstName,\n  MAX(o.EventDate) AS LastOpenDate\nFROM _Subscribers s\nINNER JOIN [ContactDE] de\n  ON s.SubscriberKey = de.SubscriberKey\nLEFT JOIN _Open o\n  ON s.SubscriberKey = o.SubscriberKey\nWHERE s.Status = 'active'\n  AND o.EventDate >= DATEADD(day, -60, GETDATE())\nGROUP BY s.SubscriberKey, s.EmailAddress, de.FirstName\nHAVING COUNT(o.SubscriberKey) >= 2`
-  },
-  {
-    name: 'Data Extension Cleanup',
-    desc: 'Identify and remove null or duplicate records from a DE.',
-    sql: `/* Step 1: Find duplicates */\nSELECT\n  SubscriberKey,\n  EmailAddress,\n  COUNT(*) AS DuplicateCount\nFROM [YourDataExtension]\nWHERE SubscriberKey IS NOT NULL\n  AND EmailAddress IS NOT NULL\n  AND LEN(RTRIM(EmailAddress)) > 0\nGROUP BY SubscriberKey, EmailAddress\nHAVING COUNT(*) > 1\n\n/* Step 2: Keep only latest (use as overwrite query) */\n/*\nSELECT a.*\nFROM (\n  SELECT *,\n    ROW_NUMBER() OVER (\n      PARTITION BY EmailAddress\n      ORDER BY DateModified DESC\n    ) AS rn\n  FROM [YourDataExtension]\n  WHERE EmailAddress IS NOT NULL\n) a\nWHERE a.rn = 1\n*/`
-  },
-  {
-    name: 'Date-Based Segmentation',
-    desc: 'Segment subscribers by signup date ranges.',
-    sql: `SELECT\n  s.SubscriberKey,\n  s.EmailAddress,\n  s.DateJoined,\n  CASE\n    WHEN s.DateJoined >= DATEADD(day, -30, GETDATE())\n      THEN 'New (0-30 days)'\n    WHEN s.DateJoined >= DATEADD(day, -90, GETDATE())\n      THEN 'Recent (31-90 days)'\n    WHEN s.DateJoined >= DATEADD(day, -365, GETDATE())\n      THEN 'Established (91-365 days)'\n    ELSE 'Veteran (1+ year)'\n  END AS SubscriberSegment\nFROM _Subscribers s\nWHERE s.Status = 'active'`
-  },
-  {
-    name: 'Cross-DE Subscriber Lookup',
-    desc: 'Find subscribers across multiple data extensions.',
-    sql: `SELECT\n  s.SubscriberKey,\n  s.EmailAddress,\n  CASE WHEN de1.SubscriberKey IS NOT NULL THEN 'Yes' ELSE 'No' END AS InDE1,\n  CASE WHEN de2.SubscriberKey IS NOT NULL THEN 'Yes' ELSE 'No' END AS InDE2,\n  CASE WHEN de3.SubscriberKey IS NOT NULL THEN 'Yes' ELSE 'No' END AS InDE3\nFROM _Subscribers s\nLEFT JOIN [DataExtension1] de1\n  ON s.SubscriberKey = de1.SubscriberKey\nLEFT JOIN [DataExtension2] de2\n  ON s.SubscriberKey = de2.SubscriberKey\nLEFT JOIN [DataExtension3] de3\n  ON s.SubscriberKey = de3.SubscriberKey\nWHERE s.Status = 'active'`
-  },
-  {
-    name: 'Email Send Performance Summary',
-    desc: 'Summarize send metrics across recent jobs.',
-    sql: `SELECT\n  j.JobID,\n  j.EmailName,\n  j.DeliveredTime,\n  COUNT(DISTINCT snt.SubscriberKey) AS TotalSent,\n  COUNT(DISTINCT o.SubscriberKey) AS UniqueOpens,\n  COUNT(DISTINCT c.SubscriberKey) AS UniqueClicks,\n  COUNT(DISTINCT b.SubscriberKey) AS Bounces,\n  COUNT(DISTINCT u.SubscriberKey) AS Unsubs,\n  CAST(\n    ROUND(COUNT(DISTINCT o.SubscriberKey) * 100.0\n    / NULLIF(COUNT(DISTINCT snt.SubscriberKey), 0), 2)\n  AS DECIMAL(5,2)) AS OpenRate,\n  CAST(\n    ROUND(COUNT(DISTINCT c.SubscriberKey) * 100.0\n    / NULLIF(COUNT(DISTINCT snt.SubscriberKey), 0), 2)\n  AS DECIMAL(5,2)) AS ClickRate\nFROM _Job j\nLEFT JOIN _Sent snt ON j.JobID = snt.JobID\nLEFT JOIN _Open o ON j.JobID = o.JobID\nLEFT JOIN _Click c ON j.JobID = c.JobID\nLEFT JOIN _Bounce b ON j.JobID = b.JobID\nLEFT JOIN _Unsubscribe u ON j.JobID = u.JobID\nWHERE j.DeliveredTime >= DATEADD(day, -30, GETDATE())\nGROUP BY j.JobID, j.EmailName, j.DeliveredTime\nORDER BY j.DeliveredTime DESC`
-  },
-  {
-    name: 'A/B Test Result Comparison',
-    desc: 'Compare metrics between A/B test variants.',
-    sql: `SELECT\n  j.EmailName,\n  COUNT(DISTINCT snt.SubscriberKey) AS Sent,\n  COUNT(DISTINCT o.SubscriberKey) AS Opens,\n  COUNT(DISTINCT c.SubscriberKey) AS Clicks,\n  CAST(\n    ROUND(COUNT(DISTINCT o.SubscriberKey) * 100.0\n    / NULLIF(COUNT(DISTINCT snt.SubscriberKey), 0), 2)\n  AS DECIMAL(5,2)) AS OpenRate,\n  CAST(\n    ROUND(COUNT(DISTINCT c.SubscriberKey) * 100.0\n    / NULLIF(COUNT(DISTINCT snt.SubscriberKey), 0), 2)\n  AS DECIMAL(5,2)) AS CTR\nFROM _Job j\nINNER JOIN _Sent snt ON j.JobID = snt.JobID\nLEFT JOIN _Open o ON j.JobID = o.JobID\nLEFT JOIN _Click c ON j.JobID = c.JobID\nWHERE j.EmailName LIKE '%AB_Test_Name%'\nGROUP BY j.EmailName\nORDER BY OpenRate DESC`
-  },
-  {
-    name: 'Subscriber Preference Center Data',
-    desc: 'Pull subscriber preferences and communication settings.',
-    sql: `SELECT\n  s.SubscriberKey,\n  s.EmailAddress,\n  s.Status,\n  p.PreferenceCategory,\n  p.OptInDate,\n  p.Channel,\n  p.Frequency\nFROM _Subscribers s\nINNER JOIN [PreferenceCenterDE] p\n  ON s.SubscriberKey = p.SubscriberKey\nWHERE s.Status = 'active'\nORDER BY s.EmailAddress`
-  },
-  {
-    name: 'Win-Back Audience Identification',
-    desc: 'Find lapsed subscribers for win-back campaigns.',
-    sql: `SELECT\n  s.SubscriberKey,\n  s.EmailAddress,\n  s.DateJoined,\n  MAX(o.EventDate) AS LastOpenDate,\n  MAX(c.EventDate) AS LastClickDate,\n  DATEDIFF(day, MAX(o.EventDate), GETDATE()) AS DaysSinceLastOpen\nFROM _Subscribers s\nLEFT JOIN _Open o\n  ON s.SubscriberKey = o.SubscriberKey\nLEFT JOIN _Click c\n  ON s.SubscriberKey = c.SubscriberKey\nWHERE s.Status = 'active'\nGROUP BY s.SubscriberKey, s.EmailAddress, s.DateJoined\nHAVING\n  MAX(o.EventDate) < DATEADD(day, -90, GETDATE())\n  OR MAX(o.EventDate) IS NULL\nORDER BY DaysSinceLastOpen DESC`
-  }
-];
-
-// ─── Data Views Reference ───
-const DATA_VIEWS = [
-  { name: '_Subscribers', fields: ['SubscriberKey', 'EmailAddress', 'Status', 'DateJoined', 'DateUndeliverable', 'DateUnsubscribed', 'Domain', 'BounceCount', 'SubscriberType', 'Locale'] },
-  { name: '_Open', fields: ['SubscriberKey', 'EventDate', 'SendID', 'JobID', 'BatchID', 'ListID', 'TriggeredSendID', 'TriggeredSendExternalKey', 'IsUnique', 'Domain', 'Browser'] },
-  { name: '_Click', fields: ['SubscriberKey', 'EventDate', 'SendID', 'JobID', 'BatchID', 'ListID', 'TriggeredSendID', 'TriggeredSendExternalKey', 'URL', 'LinkName', 'LinkContent', 'IsUnique', 'Domain', 'Browser'] },
-  { name: '_Bounce', fields: ['SubscriberKey', 'EventDate', 'SendID', 'JobID', 'BatchID', 'ListID', 'TriggeredSendID', 'BounceCategory', 'BounceSubcategory', 'SMTPBounceReason', 'SMTPCode', 'SMTPMessage', 'Domain'] },
-  { name: '_Sent', fields: ['SubscriberKey', 'EventDate', 'SendID', 'JobID', 'BatchID', 'ListID', 'TriggeredSendID', 'TriggeredSendExternalKey', 'Domain'] },
-  { name: '_Unsubscribe', fields: ['SubscriberKey', 'EventDate', 'SendID', 'JobID', 'BatchID', 'ListID', 'TriggeredSendID', 'Reason', 'Domain'] },
-  { name: '_Complaint', fields: ['SubscriberKey', 'EventDate', 'SendID', 'JobID', 'BatchID', 'ListID', 'TriggeredSendID', 'Domain'] },
-  { name: '_Job', fields: ['JobID', 'EmailName', 'EmailSubject', 'DeliveredTime', 'EmailID', 'FromName', 'FromEmail', 'SchedTime', 'PickupTime', 'SentTime', 'JobType', 'JobStatus', 'ModifiedBy', 'ModifiedDate', 'Category', 'TriggeredSendID'] }
-];
-
-// ─── Syntax Highlighting ───
-const SQL_KEYWORDS = /\b(SELECT|FROM|WHERE|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS|NULL|AS|ON|JOIN|INNER|LEFT|RIGHT|FULL|OUTER|CROSS|UNION|ALL|INSERT|INTO|UPDATE|SET|DELETE|CREATE|ALTER|DROP|TABLE|INDEX|VIEW|TOP|DISTINCT|ORDER|BY|ASC|DESC|GROUP|HAVING|LIMIT|OFFSET|CASE|WHEN|THEN|ELSE|END|WITH|OVER|PARTITION|VALUES|DECLARE|BEGIN|RETURN|EXEC|EXECUTE|PRINT|IF|WHILE|CURSOR|FETCH|NEXT|OPEN|CLOSE|DEALLOCATE|MERGE|USING|MATCHED|OUTPUT|EXCEPT|INTERSECT)\b/gi;
-const SQL_FUNCTIONS = /\b(COUNT|SUM|AVG|MIN|MAX|COALESCE|ISNULL|NULLIF|LEN|LTRIM|RTRIM|TRIM|UPPER|LOWER|SUBSTRING|CHARINDEX|REPLACE|STUFF|REVERSE|LEFT|RIGHT|REPLICATE|SPACE|STR|CONCAT|FORMAT|ABS|CEILING|FLOOR|ROUND|POWER|SQRT|SIGN|RAND|NEWID|RANK|DENSE_RANK|NTILE|LAG|LEAD|FIRST_VALUE|LAST_VALUE)\b/gi;
-const SFMC_FUNCTIONS = /\b(DATEADD|DATEDIFF|DATEPART|DATENAME|GETDATE|GETUTCDATE|CONVERT|CAST|ROW_NUMBER|HASHBYTES|CHECKSUM|TRY_CONVERT|TRY_CAST|SYSDATETIME|EOMONTH|DATEFROMPARTS|ISDATE|DAY|MONTH|YEAR)\b/gi;
-const DATA_VIEW_PATTERN = /\b(_Subscribers|_Open|_Click|_Bounce|_Sent|_Unsubscribe|_Complaint|_Job|_ListSubscribers|_EnterpriseAttribute|_BusinessUnitUnsubscribes|_FTAF|_SocialNetworkTracking|_SocialNetworkImpressions|_SMSMessageTracking|_PushAddress|_JourneyActivity|_Journey|_AutomationInstance)\b/g;
-
-function highlightSQL(code) {
-  let html = escapeHtml(code);
-
-  // Comments (-- and /* */)
-  html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="syn-comment">$1</span>');
-  html = html.replace(/(--[^\n]*)/g, '<span class="syn-comment">$1</span>');
-
-  // Strings
-  html = html.replace(/(&#39;(?:[^&#]|&#(?!39;))*?&#39;)/g, '<span class="syn-string">$1</span>');
-
-  // Numbers
-  html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="syn-number">$1</span>');
-
-  // Data views (before keywords to prevent overlap)
-  html = html.replace(DATA_VIEW_PATTERN, '<span class="syn-dataview">$1</span>');
-
-  // SFMC functions
-  html = html.replace(SFMC_FUNCTIONS, function(m) {
-    return '<span class="syn-sfmc">' + m + '</span>';
-  });
-
-  // SQL functions
-  html = html.replace(SQL_FUNCTIONS, function(m) {
-    return '<span class="syn-function">' + m + '</span>';
-  });
-
-  // SQL keywords
-  html = html.replace(SQL_KEYWORDS, function(m) {
-    return '<span class="syn-keyword">' + m + '</span>';
-  });
-
-  // Operators
-  html = html.replace(/([=&lt;&gt;!]+|&lt;|&gt;|\+|-(?!\-)|\*|\/(?!\*)|\%)/g, '<span class="syn-operator">$1</span>');
-
-  // Brackets
-  html = html.replace(/([()])/g, '<span class="syn-paren">$1</span>');
-
-  return html;
-}
-
-function escapeHtml(text) {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-}
-
-// ─── Editor Sync ───
 function updateEditor() {
-  const code = editor.value;
-  highlight.innerHTML = highlightSQL(code) + '\n';
-  updateLineNumbers();
-  updateStatusBar();
+  const text = editor.value;
+  // Highlight - add trailing newline so highlight layer matches textarea height
+  highlightLayer.innerHTML = highlightSQL(text) + '\n';
+  // Line numbers
+  const lines = text.split('\n');
+  const nums = [];
+  for (let i = 1; i <= lines.length; i++) nums.push(i);
+  lineNumbers.textContent = nums.join('\n');
+  // Resize textarea to match content
+  editor.style.height = highlightLayer.scrollHeight + 'px';
+  // Status
+  updateStatus();
 }
 
-function updateLineNumbers() {
-  const lines = editor.value.split('\n').length;
-  let html = '';
-  for (let i = 1; i <= lines; i++) {
-    html += '<div>' + i + '</div>';
+function updateStatus() {
+  const text = editor.value;
+  const lines = text.split('\n');
+  const pos = editor.selectionStart;
+  let ln = 1, col = 1;
+  let count = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (count + lines[i].length >= pos) {
+      ln = i + 1;
+      col = pos - count + 1;
+      break;
+    }
+    count += lines[i].length + 1;
   }
-  lineNumbers.innerHTML = html;
+  document.getElementById('statusLines').textContent = 'Ln ' + ln;
+  document.getElementById('statusCol').textContent = 'Col ' + col;
+  document.getElementById('statusChars').textContent = text.length + ' chars';
+  document.getElementById('statusLineCount').textContent = lines.length + (lines.length === 1 ? ' line' : ' lines');
 }
 
-function updateStatusBar() {
-  const val = editor.value;
-  const lines = val.split('\n').length;
-  const chars = val.length;
-  document.getElementById('statusLines').textContent = 'Lines: ' + lines;
-  document.getElementById('statusChars').textContent = 'Chars: ' + chars;
-}
-
-function syncScroll() {
-  highlight.scrollTop = editor.scrollTop;
-  highlight.scrollLeft = editor.scrollLeft;
-  lineNumbers.scrollTop = editor.scrollTop;
-}
-
-editor.addEventListener('input', function() {
-  updateEditor();
-  saveToHistory();
+// Sync scroll
+editorScroll.addEventListener('scroll', function() {
+  lineNumbers.style.transform = 'translateY(-' + editorScroll.scrollTop + 'px)';
 });
 
-editor.addEventListener('scroll', syncScroll);
-editor.addEventListener('click', updateCursorPos);
-editor.addEventListener('keyup', updateCursorPos);
+editor.addEventListener('input', updateEditor);
+editor.addEventListener('click', updateStatus);
+editor.addEventListener('keyup', updateStatus);
+editor.addEventListener('scroll', function() {
+  editorScroll.scrollTop = editor.scrollTop;
+  editorScroll.scrollLeft = editor.scrollLeft;
+});
 
-function updateCursorPos() {
-  const val = editor.value.substring(0, editor.selectionStart);
-  const lines = val.split('\n');
-  const ln = lines.length;
-  const col = lines[lines.length - 1].length + 1;
-  document.getElementById('statusCursor').textContent = 'Ln ' + ln + ', Col ' + col;
-}
-
-// ─── Tab key inserts spaces ───
+// Tab key inserts spaces
 editor.addEventListener('keydown', function(e) {
   if (e.key === 'Tab') {
     e.preventDefault();
     const start = this.selectionStart;
     const end = this.selectionEnd;
-    this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
-    this.selectionStart = this.selectionEnd = start + 2;
+    this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = start + 4;
     updateEditor();
   }
 });
 
-// ─── SQL Formatter ───
-function formatSQL(sql) {
-  // Simple but effective SQL formatter
-  let formatted = sql.trim();
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+    e.preventDefault(); formatSQL();
+  } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') {
+    e.preventDefault(); showSaveDialog();
+  } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'f') {
+    e.preventDefault(); toggleFind();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+    e.preventDefault(); togglePanel();
+  }
+});
+
+// Auto-save to history on blur
+editor.addEventListener('blur', function() {
+  const text = editor.value.trim();
+  if (text.length > 10) addToHistory(text);
+});
+
+// ============================================================
+// SQL FORMATTER
+// ============================================================
+function formatSQL() {
+  let sql = editor.value.trim();
+  if (!sql) return;
+
+  // Simple SQL formatter
+  const majorKeywords = ['SELECT','FROM','WHERE','INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL JOIN','CROSS JOIN','JOIN','ON','GROUP BY','ORDER BY','HAVING','UNION ALL','UNION','EXCEPT','INTERSECT','INSERT INTO','UPDATE','SET','DELETE FROM','VALUES','CASE','WHEN','THEN','ELSE','END','AND','OR','LIMIT','OFFSET','WITH'];
 
   // Normalize whitespace
-  formatted = formatted.replace(/\r\n/g, '\n').replace(/\t/g, '  ');
-
-  // Major keywords on new lines
-  const majorKW = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER BY', 'GROUP BY', 'HAVING',
-    'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'FULL JOIN', 'CROSS JOIN', 'LEFT OUTER JOIN',
-    'RIGHT OUTER JOIN', 'FULL OUTER JOIN', 'JOIN', 'ON', 'UNION ALL', 'UNION', 'INSERT INTO',
-    'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'CREATE TABLE', 'ALTER TABLE', 'WITH', 'CASE',
-    'WHEN', 'THEN', 'ELSE', 'END'];
-
-  // First collapse to single line
-  formatted = formatted.replace(/\s+/g, ' ');
+  sql = sql.replace(/\s+/g, ' ');
 
   // Add newlines before major keywords
-  majorKW.forEach(kw => {
-    const re = new RegExp('\\s+(' + kw.replace(/ /g, '\\s+') + ')\\b', 'gi');
-    formatted = formatted.replace(re, '\n$1');
+  majorKeywords.forEach(kw => {
+    const regex = new RegExp('\\b(' + kw.replace(/ /g, '\\s+') + ')\\b', 'gi');
+    sql = sql.replace(regex, '\n$1');
   });
 
-  // Indent lines after SELECT, SET
-  const lines = formatted.split('\n');
-  let result = [];
+  // Indent after SELECT, add newline+indent for columns
+  const lines = sql.split('\n').map(l => l.trim()).filter(l => l);
+  const formatted = [];
   let indent = 0;
-  let selectMode = false;
 
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i].trim();
-    if (!line) continue;
-
+  for (let line of lines) {
     const upper = line.toUpperCase();
-
-    // Decrease indent for certain keywords
-    if (upper.startsWith('FROM') || upper.startsWith('WHERE') || upper.startsWith('GROUP BY') ||
-        upper.startsWith('ORDER BY') || upper.startsWith('HAVING') || upper.startsWith('UNION')) {
-      indent = Math.max(0, indent);
-      selectMode = false;
-    }
-
-    if (upper.startsWith(')')) {
-      indent = Math.max(0, indent - 1);
-    }
-
-    result.push('  '.repeat(indent) + line);
-
-    // Increase indent after SELECT
     if (upper.startsWith('SELECT')) {
-      selectMode = true;
-    }
-
-    if (upper.includes('(') && !upper.includes(')')) {
-      indent++;
+      formatted.push('    '.repeat(indent) + line);
+    } else if (upper.startsWith('FROM') || upper.startsWith('WHERE') || upper.startsWith('GROUP BY') || upper.startsWith('ORDER BY') || upper.startsWith('HAVING')) {
+      formatted.push('    '.repeat(indent) + line);
+    } else if (upper.startsWith('INNER JOIN') || upper.startsWith('LEFT JOIN') || upper.startsWith('RIGHT JOIN') || upper.startsWith('FULL JOIN') || upper.startsWith('CROSS JOIN') || upper.startsWith('JOIN')) {
+      formatted.push('    '.repeat(indent) + line);
+    } else if (upper.startsWith('ON')) {
+      formatted.push('    '.repeat(indent) + '    ' + line);
+    } else if (upper.startsWith('AND') || upper.startsWith('OR')) {
+      formatted.push('    '.repeat(indent) + '    ' + line);
+    } else if (upper.startsWith('WHEN') || upper.startsWith('THEN') || upper.startsWith('ELSE')) {
+      formatted.push('    '.repeat(indent) + '    ' + line);
+    } else {
+      formatted.push('    '.repeat(indent) + line);
     }
   }
 
-  return result.join('\n');
+  editor.value = formatted.join('\n');
+  updateEditor();
+  showToast('SQL formatted', 'success');
 }
 
-// ─── Copy ───
+// ============================================================
+// TEMPLATES
+// ============================================================
+const TEMPLATES = [
+  {
+    name: 'Deduplicate Subscribers',
+    desc: 'Remove duplicate subscribers using ROW_NUMBER()',
+    sql: `-- Deduplicate Subscribers by EmailAddress
+-- Keeps the most recently added record per email
+
+SELECT
+    SubscriberKey,
+    EmailAddress,
+    FirstName,
+    LastName,
+    Status,
+    DateJoined
+FROM (
+    SELECT
+        s.SubscriberKey,
+        s.EmailAddress,
+        e.FirstName,
+        e.LastName,
+        s.Status,
+        s.DateJoined,
+        ROW_NUMBER() OVER (
+            PARTITION BY s.EmailAddress
+            ORDER BY s.DateJoined DESC
+        ) AS RowNum
+    FROM _Subscribers s
+    LEFT JOIN _EnterpriseAttribute e
+        ON s.SubscriberKey = e.SubscriberKey
+    WHERE s.Status = 'Active'
+) ranked
+WHERE RowNum = 1`
+  },
+  {
+    name: 'Opened Last 30 Days',
+    desc: 'Find subscribers who opened emails in last 30 days',
+    sql: `-- Subscribers who opened emails in the last 30 days
+-- Includes open count and last open date
+
+SELECT TOP 1000
+    s.SubscriberKey,
+    s.EmailAddress,
+    COUNT(o.EventDate) AS TotalOpens,
+    MAX(o.EventDate) AS LastOpenDate
+FROM _Subscribers s
+INNER JOIN _Open o
+    ON s.SubscriberKey = o.SubscriberKey
+WHERE o.EventDate > DATEADD(day, -30, GETDATE())
+    AND s.Status = 'Active'
+    AND o.IsUnique = 1
+GROUP BY
+    s.SubscriberKey,
+    s.EmailAddress
+HAVING COUNT(o.EventDate) >= 1
+ORDER BY TotalOpens DESC`
+  },
+  {
+    name: 'Clicked Not Converted',
+    desc: 'Subscribers who clicked but have no conversion record',
+    sql: `-- Clicked but not converted
+-- Find subscribers who clicked links but aren't in conversion DE
+
+SELECT DISTINCT
+    c.SubscriberKey,
+    s.EmailAddress,
+    c.EventDate AS ClickDate,
+    c.URL
+FROM _Click c
+INNER JOIN _Subscribers s
+    ON c.SubscriberKey = s.SubscriberKey
+LEFT JOIN [Conversions_DE] conv
+    ON c.SubscriberKey = conv.SubscriberKey
+WHERE c.EventDate > DATEADD(day, -14, GETDATE())
+    AND conv.SubscriberKey IS NULL
+    AND s.Status = 'Active'
+ORDER BY c.EventDate DESC`
+  },
+  {
+    name: 'Join with Data Extension',
+    desc: 'Join subscriber data with a custom Data Extension',
+    sql: `-- Join subscribers with custom Data Extension
+-- Replace [Your_DataExtension] with actual DE name
+
+SELECT
+    s.SubscriberKey,
+    s.EmailAddress,
+    de.CustomField1,
+    de.CustomField2,
+    de.PurchaseDate,
+    de.TotalAmount
+FROM _Subscribers s
+INNER JOIN [Your_DataExtension] de
+    ON s.SubscriberKey = de.SubscriberKey
+WHERE s.Status = 'Active'
+    AND de.PurchaseDate > DATEADD(month, -3, GETDATE())
+ORDER BY de.TotalAmount DESC`
+  },
+  {
+    name: 'Engagement Scoring',
+    desc: 'Calculate engagement scores with weighted activities',
+    sql: `-- Engagement Scoring Model
+-- Weighted scoring: Opens=1pt, Clicks=3pts, Recent=2x multiplier
+
+SELECT
+    s.SubscriberKey,
+    s.EmailAddress,
+    ISNULL(opens.OpenCount, 0) AS OpenCount,
+    ISNULL(clicks.ClickCount, 0) AS ClickCount,
+    CASE
+        WHEN ISNULL(clicks.ClickCount, 0) >= 5
+            AND ISNULL(opens.OpenCount, 0) >= 10
+            THEN 'Highly Engaged'
+        WHEN ISNULL(clicks.ClickCount, 0) >= 2
+            OR ISNULL(opens.OpenCount, 0) >= 5
+            THEN 'Engaged'
+        WHEN ISNULL(opens.OpenCount, 0) >= 1
+            THEN 'Somewhat Engaged'
+        ELSE 'Disengaged'
+    END AS EngagementTier,
+    (ISNULL(opens.OpenCount, 0) * 1)
+    + (ISNULL(clicks.ClickCount, 0) * 3)
+    AS EngagementScore
+FROM _Subscribers s
+LEFT JOIN (
+    SELECT SubscriberKey, COUNT(*) AS OpenCount
+    FROM _Open
+    WHERE EventDate > DATEADD(day, -90, GETDATE())
+        AND IsUnique = 1
+    GROUP BY SubscriberKey
+) opens ON s.SubscriberKey = opens.SubscriberKey
+LEFT JOIN (
+    SELECT SubscriberKey, COUNT(*) AS ClickCount
+    FROM _Click
+    WHERE EventDate > DATEADD(day, -90, GETDATE())
+        AND IsUnique = 1
+    GROUP BY SubscriberKey
+) clicks ON s.SubscriberKey = clicks.SubscriberKey
+WHERE s.Status = 'Active'
+ORDER BY EngagementScore DESC`
+  },
+  {
+    name: 'Bounce Analysis',
+    desc: 'Analyze bounces by category and type',
+    sql: `-- Bounce Analysis by Category
+-- Identify problematic email addresses
+
+SELECT
+    b.BounceCategory,
+    b.BounceSubcategory,
+    b.SMTPBounceReason,
+    COUNT(*) AS BounceCount,
+    COUNT(DISTINCT b.SubscriberKey) AS UniqueSubscribers
+FROM _Bounce b
+INNER JOIN _Subscribers s
+    ON b.SubscriberKey = s.SubscriberKey
+WHERE b.EventDate > DATEADD(day, -30, GETDATE())
+GROUP BY
+    b.BounceCategory,
+    b.BounceSubcategory,
+    b.SMTPBounceReason
+ORDER BY BounceCount DESC`
+  },
+  {
+    name: 'Unsubscribe Trends',
+    desc: 'Track unsubscribe patterns over time',
+    sql: `-- Unsubscribe Trends by Week
+-- Monitor unsubscribe velocity
+
+SELECT
+    DATEPART(year, u.EventDate) AS UnsubYear,
+    DATEPART(week, u.EventDate) AS UnsubWeek,
+    DATEADD(day,
+        -(DATEPART(weekday, u.EventDate) - 1),
+        CAST(u.EventDate AS DATE)
+    ) AS WeekStarting,
+    COUNT(*) AS UnsubCount,
+    COUNT(DISTINCT u.SubscriberKey) AS UniqueUnsubs
+FROM _Unsubscribe u
+WHERE u.EventDate > DATEADD(month, -6, GETDATE())
+GROUP BY
+    DATEPART(year, u.EventDate),
+    DATEPART(week, u.EventDate),
+    DATEADD(day,
+        -(DATEPART(weekday, u.EventDate) - 1),
+        CAST(u.EventDate AS DATE)
+    )
+ORDER BY UnsubYear DESC, UnsubWeek DESC`
+  },
+  {
+    name: 'Journey Entry Audience',
+    desc: 'Build a journey entry audience with engagement criteria',
+    sql: `-- Journey Entry Audience Builder
+-- Engaged subscribers who haven't been contacted recently
+
+SELECT
+    s.SubscriberKey,
+    s.EmailAddress
+FROM _Subscribers s
+INNER JOIN (
+    SELECT SubscriberKey
+    FROM _Open
+    WHERE EventDate > DATEADD(day, -60, GETDATE())
+        AND IsUnique = 1
+    GROUP BY SubscriberKey
+    HAVING COUNT(*) >= 2
+) engaged ON s.SubscriberKey = engaged.SubscriberKey
+WHERE s.Status = 'Active'
+    AND s.SubscriberKey NOT IN (
+        SELECT DISTINCT SubscriberKey
+        FROM _Sent
+        WHERE EventDate > DATEADD(day, -7, GETDATE())
+    )
+    AND s.SubscriberKey NOT IN (
+        SELECT DISTINCT SubscriberKey
+        FROM _Bounce
+        WHERE EventDate > DATEADD(day, -30, GETDATE())
+            AND BounceCategory = 'Hard bounce'
+    )`
+  },
+  {
+    name: 'DE Cleanup',
+    desc: 'Find and remove duplicate or incomplete records',
+    sql: `-- Data Extension Cleanup
+-- Find duplicates and records with missing required fields
+
+-- Step 1: Find duplicates
+SELECT
+    SubscriberKey,
+    EmailAddress,
+    COUNT(*) AS DuplicateCount
+FROM [Your_DataExtension]
+GROUP BY SubscriberKey, EmailAddress
+HAVING COUNT(*) > 1
+
+/* Step 2: Find records with NULL required fields
+SELECT
+    SubscriberKey,
+    EmailAddress,
+    FirstName,
+    LastName
+FROM [Your_DataExtension]
+WHERE EmailAddress IS NULL
+    OR LEN(RTRIM(EmailAddress)) = 0
+    OR SubscriberKey IS NULL
+    OR LEN(RTRIM(SubscriberKey)) = 0
+ORDER BY SubscriberKey
+*/`
+  },
+  {
+    name: 'Date Segmentation',
+    desc: 'Segment subscribers by date ranges and recency',
+    sql: `-- Date-Based Segmentation
+-- Categorize subscribers by their last activity
+
+SELECT
+    s.SubscriberKey,
+    s.EmailAddress,
+    MAX(o.EventDate) AS LastActivity,
+    CASE
+        WHEN MAX(o.EventDate) > DATEADD(day, -7, GETDATE())
+            THEN '1 - Active (Last 7 days)'
+        WHEN MAX(o.EventDate) > DATEADD(day, -30, GETDATE())
+            THEN '2 - Recent (8-30 days)'
+        WHEN MAX(o.EventDate) > DATEADD(day, -90, GETDATE())
+            THEN '3 - Lapsing (31-90 days)'
+        WHEN MAX(o.EventDate) > DATEADD(day, -180, GETDATE())
+            THEN '4 - At Risk (91-180 days)'
+        ELSE '5 - Inactive (180+ days)'
+    END AS ActivitySegment,
+    DATEDIFF(day, MAX(o.EventDate), GETDATE()) AS DaysSinceActivity
+FROM _Subscribers s
+LEFT JOIN _Open o
+    ON s.SubscriberKey = o.SubscriberKey
+WHERE s.Status = 'Active'
+GROUP BY s.SubscriberKey, s.EmailAddress
+ORDER BY LastActivity DESC`
+  },
+  {
+    name: 'Cross-DE Lookup',
+    desc: 'Join data across multiple Data Extensions',
+    sql: `-- Cross-DE Lookup
+-- Combine data from multiple Data Extensions
+
+SELECT
+    c.SubscriberKey,
+    c.EmailAddress,
+    c.FirstName,
+    c.LastName,
+    p.ProductName,
+    p.PurchaseDate,
+    p.Amount,
+    pref.PreferredChannel,
+    pref.OptInDate
+FROM [Contacts_DE] c
+INNER JOIN [Purchases_DE] p
+    ON c.SubscriberKey = p.SubscriberKey
+LEFT JOIN [Preferences_DE] pref
+    ON c.SubscriberKey = pref.SubscriberKey
+WHERE p.PurchaseDate > DATEADD(month, -6, GETDATE())
+    AND p.Amount > 0
+ORDER BY p.PurchaseDate DESC, p.Amount DESC`
+  },
+  {
+    name: 'Send Performance',
+    desc: 'Analyze email send performance with open and click rates',
+    sql: `-- Send Performance Report
+-- Calculate open and click rates per job/send
+
+SELECT
+    j.JobID,
+    j.EmailName,
+    j.DeliveredTime,
+    COUNT(DISTINCT st.SubscriberKey) AS TotalSent,
+    COUNT(DISTINCT o.SubscriberKey) AS UniqueOpens,
+    COUNT(DISTINCT c.SubscriberKey) AS UniqueClicks,
+    COUNT(DISTINCT b.SubscriberKey) AS Bounces,
+    CAST(
+        ROUND(
+            COUNT(DISTINCT o.SubscriberKey) * 100.0
+            / NULLIF(COUNT(DISTINCT st.SubscriberKey), 0),
+        2) AS DECIMAL(5,2)
+    ) AS OpenRate,
+    CAST(
+        ROUND(
+            COUNT(DISTINCT c.SubscriberKey) * 100.0
+            / NULLIF(COUNT(DISTINCT st.SubscriberKey), 0),
+        2) AS DECIMAL(5,2)
+    ) AS ClickRate
+FROM _Job j
+INNER JOIN _Sent st ON j.JobID = st.JobID
+LEFT JOIN _Open o ON st.JobID = o.JobID
+    AND st.SubscriberKey = o.SubscriberKey
+    AND o.IsUnique = 1
+LEFT JOIN _Click c ON st.JobID = c.JobID
+    AND st.SubscriberKey = c.SubscriberKey
+    AND c.IsUnique = 1
+LEFT JOIN _Bounce b ON st.JobID = b.JobID
+    AND st.SubscriberKey = b.SubscriberKey
+WHERE j.DeliveredTime > DATEADD(day, -30, GETDATE())
+GROUP BY j.JobID, j.EmailName, j.DeliveredTime
+ORDER BY j.DeliveredTime DESC`
+  },
+  {
+    name: 'A/B Test Comparison',
+    desc: 'Compare A/B test results across send variants',
+    sql: `-- A/B Test Results Comparison
+-- Compare performance of test variants
+
+SELECT
+    j.EmailName,
+    j.JobID,
+    j.DeliveredTime,
+    COUNT(DISTINCT st.SubscriberKey) AS Sent,
+    COUNT(DISTINCT o.SubscriberKey) AS Opens,
+    COUNT(DISTINCT c.SubscriberKey) AS Clicks,
+    CAST(ROUND(
+        COUNT(DISTINCT o.SubscriberKey) * 100.0
+        / NULLIF(COUNT(DISTINCT st.SubscriberKey), 0), 2
+    ) AS DECIMAL(5,2)) AS OpenPct,
+    CAST(ROUND(
+        COUNT(DISTINCT c.SubscriberKey) * 100.0
+        / NULLIF(COUNT(DISTINCT o.SubscriberKey), 0), 2
+    ) AS DECIMAL(5,2)) AS ClickToOpenPct
+FROM _Job j
+INNER JOIN _Sent st ON j.JobID = st.JobID
+LEFT JOIN _Open o ON j.JobID = o.JobID
+    AND st.SubscriberKey = o.SubscriberKey
+    AND o.IsUnique = 1
+LEFT JOIN _Click c ON j.JobID = c.JobID
+    AND st.SubscriberKey = c.SubscriberKey
+    AND c.IsUnique = 1
+WHERE j.EmailName LIKE '%ABTest%'
+    AND j.DeliveredTime > DATEADD(day, -30, GETDATE())
+GROUP BY j.EmailName, j.JobID, j.DeliveredTime
+ORDER BY j.DeliveredTime DESC, OpenPct DESC`
+  },
+  {
+    name: 'Preference Center',
+    desc: 'Query and manage subscriber preferences',
+    sql: `-- Preference Center Query
+-- Get subscriber preferences for targeted sends
+
+SELECT
+    s.SubscriberKey,
+    s.EmailAddress,
+    pref.NewsletterOptIn,
+    pref.ProductUpdatesOptIn,
+    pref.WeeklyDigestOptIn,
+    pref.PreferredFrequency,
+    pref.PreferredCategory,
+    pref.LastUpdated
+FROM _Subscribers s
+INNER JOIN [Preference_Center_DE] pref
+    ON s.SubscriberKey = pref.SubscriberKey
+WHERE s.Status = 'Active'
+    AND pref.NewsletterOptIn = 1
+    AND (
+        pref.PreferredFrequency = 'Weekly'
+        OR pref.PreferredFrequency = 'Daily'
+    )
+ORDER BY pref.LastUpdated DESC`
+  },
+  {
+    name: 'Win-Back Audience',
+    desc: 'Identify inactive subscribers for win-back campaigns',
+    sql: `-- Win-Back Audience
+-- Subscribers who were active but have gone silent
+
+SELECT
+    s.SubscriberKey,
+    s.EmailAddress,
+    MAX(o.EventDate) AS LastOpenDate,
+    DATEDIFF(day, MAX(o.EventDate), GETDATE()) AS DaysSinceLastOpen
+FROM _Subscribers s
+INNER JOIN _Open o
+    ON s.SubscriberKey = o.SubscriberKey
+WHERE s.Status = 'Active'
+    AND NOT EXISTS (
+        SELECT 1 FROM _Open o2
+        WHERE o2.SubscriberKey = s.SubscriberKey
+            AND o2.EventDate > DATEADD(day, -60, GETDATE())
+    )
+    AND EXISTS (
+        SELECT 1 FROM _Open o3
+        WHERE o3.SubscriberKey = s.SubscriberKey
+            AND o3.EventDate > DATEADD(day, -365, GETDATE())
+    )
+    AND s.SubscriberKey NOT IN (
+        SELECT SubscriberKey
+        FROM _Unsubscribe
+        WHERE EventDate > DATEADD(day, -365, GETDATE())
+    )
+GROUP BY s.SubscriberKey, s.EmailAddress
+HAVING DATEDIFF(day, MAX(o.EventDate), GETDATE()) BETWEEN 60 AND 180
+ORDER BY LastOpenDate DESC`
+  }
+];
+
+// ============================================================
+// DATA VIEWS REFERENCE
+// ============================================================
+const DATA_VIEWS = {
+  '_Subscribers': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Unique subscriber identifier' },
+    { name: 'EmailAddress', type: 'nvarchar', desc: 'Email address' },
+    { name: 'Status', type: 'nvarchar', desc: 'Active, Held, Unsubscribed, Bounced' },
+    { name: 'DateJoined', type: 'datetime', desc: 'Date subscriber was added' },
+    { name: 'DateUnsubscribed', type: 'datetime', desc: 'Date of unsubscribe' },
+    { name: 'DateHeld', type: 'datetime', desc: 'Date status set to Held' },
+    { name: 'Domain', type: 'nvarchar', desc: 'Email domain' }
+  ],
+  '_Sent': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Subscriber key' },
+    { name: 'JobID', type: 'int', desc: 'Send job ID' },
+    { name: 'EventDate', type: 'datetime', desc: 'Date/time of send' },
+    { name: 'BatchID', type: 'int', desc: 'Batch identifier' },
+    { name: 'ListID', type: 'int', desc: 'List ID used' },
+    { name: 'TriggeredSendExternalKey', type: 'nvarchar', desc: 'Triggered send key' }
+  ],
+  '_Open': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Subscriber key' },
+    { name: 'JobID', type: 'int', desc: 'Send job ID' },
+    { name: 'EventDate', type: 'datetime', desc: 'Open event timestamp' },
+    { name: 'IsUnique', type: 'bit', desc: 'First open = 1' },
+    { name: 'ListID', type: 'int', desc: 'List ID' },
+    { name: 'BatchID', type: 'int', desc: 'Batch ID' },
+    { name: 'TriggeredSendExternalKey', type: 'nvarchar', desc: 'Triggered send key' }
+  ],
+  '_Click': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Subscriber key' },
+    { name: 'JobID', type: 'int', desc: 'Send job ID' },
+    { name: 'EventDate', type: 'datetime', desc: 'Click event timestamp' },
+    { name: 'URL', type: 'nvarchar', desc: 'Clicked URL' },
+    { name: 'LinkName', type: 'nvarchar', desc: 'Link alias' },
+    { name: 'IsUnique', type: 'bit', desc: 'First click = 1' },
+    { name: 'ListID', type: 'int', desc: 'List ID' },
+    { name: 'BatchID', type: 'int', desc: 'Batch ID' }
+  ],
+  '_Bounce': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Subscriber key' },
+    { name: 'JobID', type: 'int', desc: 'Send job ID' },
+    { name: 'EventDate', type: 'datetime', desc: 'Bounce timestamp' },
+    { name: 'BounceCategory', type: 'nvarchar', desc: 'Hard/Soft bounce' },
+    { name: 'BounceSubcategory', type: 'nvarchar', desc: 'Specific bounce reason' },
+    { name: 'SMTPBounceReason', type: 'nvarchar', desc: 'SMTP error message' },
+    { name: 'SMTPCode', type: 'int', desc: 'SMTP response code' }
+  ],
+  '_Unsubscribe': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Subscriber key' },
+    { name: 'JobID', type: 'int', desc: 'Send job ID' },
+    { name: 'EventDate', type: 'datetime', desc: 'Unsub timestamp' },
+    { name: 'ListID', type: 'int', desc: 'List ID' },
+    { name: 'BatchID', type: 'int', desc: 'Batch ID' },
+    { name: 'Reason', type: 'nvarchar', desc: 'Unsub reason if provided' }
+  ],
+  '_Job': [
+    { name: 'JobID', type: 'int', desc: 'Unique job identifier' },
+    { name: 'EmailName', type: 'nvarchar', desc: 'Name of the email' },
+    { name: 'EmailSubject', type: 'nvarchar', desc: 'Subject line' },
+    { name: 'DeliveredTime', type: 'datetime', desc: 'Send completion time' },
+    { name: 'JobType', type: 'nvarchar', desc: 'Type of job' },
+    { name: 'JobStatus', type: 'nvarchar', desc: 'Completed, Error, etc.' },
+    { name: 'TriggeredSendExternalKey', type: 'nvarchar', desc: 'Triggered send key' }
+  ],
+  '_Complaint': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Subscriber key' },
+    { name: 'JobID', type: 'int', desc: 'Job ID' },
+    { name: 'EventDate', type: 'datetime', desc: 'Complaint timestamp' },
+    { name: 'ListID', type: 'int', desc: 'List ID' },
+    { name: 'BatchID', type: 'int', desc: 'Batch ID' }
+  ],
+  '_ListSubscribers': [
+    { name: 'SubscriberKey', type: 'nvarchar', desc: 'Subscriber key' },
+    { name: 'ListID', type: 'int', desc: 'List identifier' },
+    { name: 'ListName', type: 'nvarchar', desc: 'Name of the list' },
+    { name: 'Status', type: 'nvarchar', desc: 'Status on this list' },
+    { name: 'DateJoined', type: 'datetime', desc: 'Date added to list' },
+    { name: 'DateUnsubscribed', type: 'datetime', desc: 'Date removed' }
+  ],
+  '_Journey': [
+    { name: 'VersionID', type: 'nvarchar', desc: 'Journey version ID' },
+    { name: 'JourneyID', type: 'nvarchar', desc: 'Journey identifier' },
+    { name: 'JourneyName', type: 'nvarchar', desc: 'Journey name' },
+    { name: 'VersionNumber', type: 'int', desc: 'Version number' },
+    { name: 'CreatedDate', type: 'datetime', desc: 'Creation date' },
+    { name: 'LastPublishedDate', type: 'datetime', desc: 'Last published' },
+    { name: 'JourneyStatus', type: 'nvarchar', desc: 'Draft, Running, etc.' }
+  ],
+  '_JourneyActivity': [
+    { name: 'VersionID', type: 'nvarchar', desc: 'Journey version ID' },
+    { name: 'ActivityID', type: 'nvarchar', desc: 'Activity identifier' },
+    { name: 'ActivityName', type: 'nvarchar', desc: 'Activity name' },
+    { name: 'ActivityType', type: 'nvarchar', desc: 'Email, Wait, Decision, etc.' },
+    { name: 'ActivityExternalKey', type: 'nvarchar', desc: 'External key' }
+  ]
+};
+
+// ============================================================
+// PANEL FUNCTIONS
+// ============================================================
+function togglePanel() {
+  document.getElementById('sidePanel').classList.toggle('collapsed');
+}
+
+function switchPanelTab(tab) {
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
+  document.querySelector('[onclick="switchPanelTab(\'' + tab + '\')"]').classList.add('active');
+  document.getElementById('sec-' + tab).classList.add('active');
+
+  if (tab === 'snippets') renderSnippets();
+  if (tab === 'history') renderHistory();
+}
+
+// Templates
+function renderTemplates(filter) {
+  const container = document.getElementById('tplList');
+  filter = (filter || '').toLowerCase();
+  container.innerHTML = TEMPLATES
+    .filter(t => !filter || t.name.toLowerCase().includes(filter) || t.desc.toLowerCase().includes(filter))
+    .map((t, i) => '<div class="tpl-card" onclick="loadTemplate(' + TEMPLATES.indexOf(t) + ')">' +
+      '<h4>' + escapeHTML(t.name) + '</h4>' +
+      '<p>' + escapeHTML(t.desc) + '</p></div>').join('');
+}
+
+function filterTemplates() {
+  renderTemplates(document.getElementById('tplSearch').value);
+}
+
+function loadTemplate(idx) {
+  const tpl = TEMPLATES[idx];
+  editor.value = tpl.sql;
+  updateEditor();
+  addToHistory(tpl.sql);
+  showToast('Loaded: ' + tpl.name, 'success');
+  editor.focus();
+}
+
+// Snippets
+function renderSnippets() {
+  const snippets = getSnippets();
+  const container = document.getElementById('snippetList');
+  if (snippets.length === 0) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px">No saved snippets yet.<br>Use Ctrl+S to save.</p>';
+    return;
+  }
+  container.innerHTML = snippets.map((sn, i) =>
+    '<div class="snippet-item" onclick="loadSnippet(' + i + ')">' +
+    '<span class="sn-name">' + escapeHTML(sn.name) + '</span>' +
+    '<span class="sn-date">' + formatDate(sn.date) + '</span>' +
+    '<button class="sn-del" onclick="event.stopPropagation();deleteSnippet(' + i + ')" title="Delete">&times;</button>' +
+    '</div>'
+  ).join('');
+}
+
+function getSnippets() {
+  try { return JSON.parse(localStorage.getItem('sfmc_qsp_snippets') || '[]'); } catch { return []; }
+}
+
+function saveSnippetData(name) {
+  const snippets = getSnippets();
+  snippets.unshift({ name, sql: editor.value, date: Date.now() });
+  localStorage.setItem('sfmc_qsp_snippets', JSON.stringify(snippets));
+}
+
+function loadSnippet(i) {
+  const snippets = getSnippets();
+  if (snippets[i]) {
+    editor.value = snippets[i].sql;
+    updateEditor();
+    showToast('Loaded: ' + snippets[i].name, 'success');
+  }
+}
+
+function deleteSnippet(i) {
+  const snippets = getSnippets();
+  snippets.splice(i, 1);
+  localStorage.setItem('sfmc_qsp_snippets', JSON.stringify(snippets));
+  renderSnippets();
+  showToast('Snippet deleted', '');
+}
+
+// Data Views
+function renderDataViews(filter) {
+  const container = document.getElementById('dvList');
+  filter = (filter || '').toLowerCase();
+  let html = '';
+  for (const [name, fields] of Object.entries(DATA_VIEWS)) {
+    if (filter && !name.toLowerCase().includes(filter) && !fields.some(f => f.name.toLowerCase().includes(filter))) continue;
+    html += '<div class="dv-group">' +
+      '<div class="dv-header" onclick="this.parentElement.classList.toggle(\'open\')">' +
+      escapeHTML(name) + '<span class="arrow">&#9654;</span></div>' +
+      '<div class="dv-fields">' +
+      fields.map(f =>
+        '<div class="dv-field" onclick="insertAtCursor(\'' + f.name + '\')" title="' + escapeHTML(f.desc) + '">' +
+        '<span class="f-name">' + escapeHTML(f.name) + '</span>' +
+        '<span class="f-type">' + f.type + '</span>' +
+        '</div>'
+      ).join('') +
+      '</div></div>';
+  }
+  container.innerHTML = html;
+}
+
+function filterDataViews() {
+  renderDataViews(document.getElementById('dvSearch').value);
+}
+
+function insertAtCursor(text) {
+  editor.focus();
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+  editor.value = editor.value.substring(0, start) + text + editor.value.substring(end);
+  editor.selectionStart = editor.selectionEnd = start + text.length;
+  updateEditor();
+}
+
+// History
+function addToHistory(sql) {
+  if (!sql || sql.trim().length < 10) return;
+  let hist;
+  try { hist = JSON.parse(localStorage.getItem('sfmc_qsp_history') || '[]'); } catch { hist = []; }
+  // Dedupe
+  hist = hist.filter(h => h.sql !== sql);
+  hist.unshift({ sql, date: Date.now() });
+  if (hist.length > 30) hist = hist.slice(0, 30);
+  localStorage.setItem('sfmc_qsp_history', JSON.stringify(hist));
+}
+
+function renderHistory() {
+  let hist;
+  try { hist = JSON.parse(localStorage.getItem('sfmc_qsp_history') || '[]'); } catch { hist = []; }
+  const container = document.getElementById('histList');
+  if (hist.length === 0) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px">No history yet.</p>';
+    return;
+  }
+  container.innerHTML = hist.map((h, i) =>
+    '<div class="hist-item" onclick="loadHistory(' + i + ')">' +
+    '<div class="h-preview">' + escapeHTML(h.sql.substring(0, 80)) + '</div>' +
+    '<div class="h-time">' + formatDate(h.date) + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function loadHistory(i) {
+  let hist;
+  try { hist = JSON.parse(localStorage.getItem('sfmc_qsp_history') || '[]'); } catch { hist = []; }
+  if (hist[i]) {
+    editor.value = hist[i].sql;
+    updateEditor();
+    showToast('Loaded from history', 'success');
+  }
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
 function copyToClipboard() {
   navigator.clipboard.writeText(editor.value).then(() => {
-    showToast('Copied to clipboard!', 'success');
+    showToast('Copied to clipboard', 'success');
   }).catch(() => {
     // Fallback
     editor.select();
     document.execCommand('copy');
-    showToast('Copied!', 'success');
+    showToast('Copied to clipboard', 'success');
   });
 }
 
-// ─── Export / Import ───
 function exportSQL() {
-  const blob = new Blob([editor.value], { type: 'text/sql' });
+  const text = editor.value;
+  if (!text.trim()) { showToast('Nothing to export', 'error'); return; }
+  const blob = new Blob([text], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'query_' + new Date().toISOString().slice(0,10) + '.sql';
   a.click();
   URL.revokeObjectURL(a.href);
-  showToast('Exported .sql file', 'success');
+  showToast('Exported as .sql', 'success');
 }
 
-function importSQL(file) {
+function importSQL() {
+  document.getElementById('fileInput').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(e) {
-    editor.value = e.target.result;
+  reader.onload = function(ev) {
+    editor.value = ev.target.result;
     updateEditor();
     showToast('Imported: ' + file.name, 'success');
   };
   reader.readAsText(file);
+  e.target.value = '';
 }
 
-// ─── Snippets (localStorage) ───
-function getSnippets() {
-  try { return JSON.parse(localStorage.getItem('qsp_snippets') || '[]'); }
-  catch { return []; }
+function clearEditor() {
+  if (editor.value.trim() && !confirm('Clear the editor?')) return;
+  editor.value = '';
+  updateEditor();
 }
 
-function saveSnippet(name) {
-  const snippets = getSnippets();
-  snippets.unshift({ name, sql: editor.value, date: new Date().toISOString() });
-  localStorage.setItem('qsp_snippets', JSON.stringify(snippets.slice(0, 50)));
-  renderSnippets();
-  showToast('Snippet saved: ' + name, 'success');
+// Save dialog
+function showSaveDialog() {
+  if (!editor.value.trim()) { showToast('Nothing to save', 'error'); return; }
+  document.getElementById('saveModal').classList.add('visible');
+  const input = document.getElementById('snippetName');
+  input.value = '';
+  input.focus();
 }
 
-function deleteSnippet(idx) {
-  const snippets = getSnippets();
-  snippets.splice(idx, 1);
-  localStorage.setItem('qsp_snippets', JSON.stringify(snippets));
-  renderSnippets();
+function closeSaveDialog() {
+  document.getElementById('saveModal').classList.remove('visible');
 }
 
-function renderSnippets() {
-  const sec = document.getElementById('sec-snippets');
-  const snippets = getSnippets();
-  if (!snippets.length) {
-    sec.innerHTML = '<div class="empty-state">No saved snippets yet.<br>Use Ctrl+S to save.</div>';
-    return;
+function saveSnippet() {
+  const name = document.getElementById('snippetName').value.trim();
+  if (!name) { showToast('Enter a name', 'error'); return; }
+  saveSnippetData(name);
+  closeSaveDialog();
+  showToast('Saved: ' + name, 'success');
+}
+
+document.getElementById('snippetName').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') saveSnippet();
+  if (e.key === 'Escape') closeSaveDialog();
+});
+
+document.getElementById('saveModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSaveDialog();
+});
+
+// Find & Replace
+function toggleFind() {
+  const bar = document.getElementById('findBar');
+  bar.classList.toggle('visible');
+  if (bar.classList.contains('visible')) {
+    document.getElementById('findInput').focus();
   }
-  sec.innerHTML = snippets.map((s, i) =>
-    '<div class="snippet-item" data-idx="' + i + '">' +
-    '<span class="snippet-name">' + escapeHtml(s.name) + '</span>' +
-    '<button class="snippet-delete" data-idx="' + i + '" title="Delete">✕</button>' +
-    '</div>'
-  ).join('');
-
-  sec.querySelectorAll('.snippet-item').forEach(el => {
-    el.addEventListener('click', function(e) {
-      if (e.target.classList.contains('snippet-delete')) {
-        deleteSnippet(parseInt(e.target.dataset.idx));
-        return;
-      }
-      const s = getSnippets()[parseInt(this.dataset.idx)];
-      if (s) { editor.value = s.sql; updateEditor(); showToast('Loaded: ' + s.name, 'info'); }
-    });
-  });
 }
-
-// ─── History (localStorage) ───
-let historyTimeout = null;
-function saveToHistory() {
-  clearTimeout(historyTimeout);
-  historyTimeout = setTimeout(() => {
-    const val = editor.value.trim();
-    if (!val || val.length < 10) return;
-    try {
-      let history = JSON.parse(localStorage.getItem('qsp_history') || '[]');
-      // Don't save duplicates of most recent
-      if (history.length && history[0].sql === val) return;
-      history.unshift({ sql: val, date: new Date().toISOString() });
-      history = history.slice(0, 30);
-      localStorage.setItem('qsp_history', JSON.stringify(history));
-      renderHistory();
-    } catch {}
-  }, 2000);
-}
-
-function renderHistory() {
-  const sec = document.getElementById('sec-history');
-  let history = [];
-  try { history = JSON.parse(localStorage.getItem('qsp_history') || '[]'); } catch {}
-  if (!history.length) {
-    sec.innerHTML = '<div class="empty-state">No query history yet.<br>Start typing to auto-save.</div>';
-    return;
-  }
-  sec.innerHTML = history.map((h, i) => {
-    const time = new Date(h.date).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    const preview = h.sql.substring(0, 60).replace(/\n/g, ' ');
-    return '<div class="history-item" data-idx="' + i + '">' +
-      '<div style="flex:1;min-width:0"><div class="history-time">' + time + '</div>' +
-      '<div class="history-preview">' + escapeHtml(preview) + '</div></div>' +
-      '<button class="history-delete" data-idx="' + i + '" title="Delete">✕</button>' +
-      '</div>';
-  }).join('');
-
-  sec.querySelectorAll('.history-item').forEach(el => {
-    el.addEventListener('click', function(e) {
-      if (e.target.classList.contains('history-delete')) {
-        let history = JSON.parse(localStorage.getItem('qsp_history') || '[]');
-        history.splice(parseInt(e.target.dataset.idx), 1);
-        localStorage.setItem('qsp_history', JSON.stringify(history));
-        renderHistory();
-        return;
-      }
-      let history = JSON.parse(localStorage.getItem('qsp_history') || '[]');
-      const h = history[parseInt(this.dataset.idx)];
-      if (h) { editor.value = h.sql; updateEditor(); showToast('Loaded from history', 'info'); }
-    });
-  });
-}
-
-// ─── Render Templates ───
-function renderTemplates() {
-  const sec = document.getElementById('sec-templates');
-  sec.innerHTML = TEMPLATES.map((t, i) =>
-    '<div class="template-card" data-idx="' + i + '">' +
-    '<h4>' + escapeHtml(t.name) + '</h4>' +
-    '<p>' + escapeHtml(t.desc) + '</p>' +
-    '</div>'
-  ).join('');
-
-  sec.querySelectorAll('.template-card').forEach(el => {
-    el.addEventListener('click', function() {
-      const t = TEMPLATES[parseInt(this.dataset.idx)];
-      editor.value = t.sql;
-      updateEditor();
-      showToast('Template loaded: ' + t.name, 'info');
-    });
-  });
-}
-
-// ─── Render Data View Reference ───
-function renderReference() {
-  const sec = document.getElementById('sec-reference');
-  sec.innerHTML = DATA_VIEWS.map((dv, i) =>
-    '<div class="dv-group">' +
-    '<div class="dv-header" data-idx="' + i + '"><span class="arrow">▶</span> ' + dv.name + ' <span style="color:var(--text-muted);font-weight:400;font-size:11px">(' + dv.fields.length + ')</span></div>' +
-    '<div class="dv-fields" data-idx="' + i + '">' +
-    dv.fields.map(f => '<div class="dv-field" data-field="' + f + '">' + f + '</div>').join('') +
-    '</div></div>'
-  ).join('');
-
-  sec.querySelectorAll('.dv-header').forEach(el => {
-    el.addEventListener('click', function() {
-      this.classList.toggle('open');
-      const fields = sec.querySelector('.dv-fields[data-idx="' + this.dataset.idx + '"]');
-      fields.classList.toggle('open');
-    });
-  });
-
-  sec.querySelectorAll('.dv-field').forEach(el => {
-    el.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const field = this.dataset.field;
-      const start = editor.selectionStart;
-      editor.value = editor.value.substring(0, start) + field + editor.value.substring(editor.selectionEnd);
-      editor.selectionStart = editor.selectionEnd = start + field.length;
-      editor.focus();
-      updateEditor();
-      showToast('Inserted: ' + field, 'info');
-    });
-  });
-}
-
-// ─── Find & Replace ───
-let findMatches = [];
-let findIndex = -1;
 
 function doFind() {
-  const q = findInput.value;
-  if (!q) { findMatches = []; document.getElementById('findCount').textContent = ''; return; }
+  const query = document.getElementById('findInput').value;
+  if (!query) { document.getElementById('findCount').textContent = ''; return; }
   const text = editor.value;
-  findMatches = [];
-  let idx = text.toLowerCase().indexOf(q.toLowerCase());
-  while (idx !== -1) {
-    findMatches.push(idx);
-    idx = text.toLowerCase().indexOf(q.toLowerCase(), idx + 1);
-  }
-  document.getElementById('findCount').textContent = findMatches.length + ' found';
-  if (findMatches.length > 0) {
-    findIndex = 0;
-    editor.setSelectionRange(findMatches[0], findMatches[0] + q.length);
+  let count = 0, idx = -1;
+  while ((idx = text.indexOf(query, idx + 1)) !== -1) count++;
+  document.getElementById('findCount').textContent = count + ' found';
+  // Select first occurrence
+  const first = text.indexOf(query);
+  if (first !== -1) {
     editor.focus();
+    editor.setSelectionRange(first, first + query.length);
   }
 }
 
-function findNext() {
-  if (!findMatches.length) return;
-  findIndex = (findIndex + 1) % findMatches.length;
-  const q = findInput.value;
-  editor.setSelectionRange(findMatches[findIndex], findMatches[findIndex] + q.length);
-  editor.focus();
-}
-
-function findPrev() {
-  if (!findMatches.length) return;
-  findIndex = (findIndex - 1 + findMatches.length) % findMatches.length;
-  const q = findInput.value;
-  editor.setSelectionRange(findMatches[findIndex], findMatches[findIndex] + q.length);
-  editor.focus();
-}
-
-function replaceOne() {
-  if (findIndex < 0 || !findMatches.length) return;
-  const q = findInput.value;
-  const r = replaceInput.value;
-  const pos = findMatches[findIndex];
-  editor.value = editor.value.substring(0, pos) + r + editor.value.substring(pos + q.length);
+function doReplace() {
+  const find = document.getElementById('findInput').value;
+  const repl = document.getElementById('replaceInput').value;
+  if (!find) return;
+  const start = editor.value.indexOf(find, editor.selectionStart);
+  if (start === -1) return;
+  editor.value = editor.value.substring(0, start) + repl + editor.value.substring(start + find.length);
+  editor.setSelectionRange(start + repl.length, start + repl.length);
   updateEditor();
   doFind();
 }
 
-function replaceAll() {
-  const q = findInput.value;
-  const r = replaceInput.value;
-  if (!q) return;
-  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-  editor.value = editor.value.replace(re, r);
+function doReplaceAll() {
+  const find = document.getElementById('findInput').value;
+  const repl = document.getElementById('replaceInput').value;
+  if (!find) return;
+  const count = editor.value.split(find).length - 1;
+  editor.value = editor.value.split(find).join(repl);
   updateEditor();
-  doFind();
-  showToast('Replaced all occurrences', 'success');
+  document.getElementById('findCount').textContent = count + ' replaced';
 }
 
-findInput.addEventListener('input', doFind);
-document.getElementById('btnFindNext').addEventListener('click', findNext);
-document.getElementById('btnFindPrev').addEventListener('click', findPrev);
-document.getElementById('btnReplaceOne').addEventListener('click', replaceOne);
-document.getElementById('btnReplaceAll').addEventListener('click', replaceAll);
-document.getElementById('btnFindClose').addEventListener('click', () => { findBar.classList.remove('open'); });
-
-// ─── Side Panel Tabs ───
-document.querySelectorAll('.side-tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    document.querySelectorAll('.side-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.side-section').forEach(s => s.classList.remove('active'));
-    this.classList.add('active');
-    document.getElementById('sec-' + this.dataset.tab).classList.add('active');
-  });
-});
-
-// ─── Toolbar Actions ───
-document.getElementById('btnFormat').addEventListener('click', () => {
-  editor.value = formatSQL(editor.value);
-  updateEditor();
-  showToast('SQL formatted', 'success');
-});
-
-document.getElementById('btnCopy').addEventListener('click', copyToClipboard);
-document.getElementById('btnExport').addEventListener('click', exportSQL);
-
-document.getElementById('btnImport').addEventListener('click', () => {
-  document.getElementById('fileImport').click();
-});
-
-document.getElementById('fileImport').addEventListener('change', function() {
-  if (this.files[0]) importSQL(this.files[0]);
-  this.value = '';
-});
-
-document.getElementById('btnFind').addEventListener('click', () => {
-  findBar.classList.toggle('open');
-  if (findBar.classList.contains('open')) findInput.focus();
-});
-
-document.getElementById('btnPanel').addEventListener('click', () => {
-  sidePanel.classList.toggle('collapsed');
-});
-
-// Theme toggle
-document.getElementById('btnTheme').addEventListener('click', () => {
+// Theme
+function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
   html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.getElementById('statusTheme').textContent = isDark ? '● Light' : '● Dark';
-  localStorage.setItem('qsp_theme', isDark ? 'light' : 'dark');
-  showToast(isDark ? 'Light mode' : 'Dark mode', 'info');
-});
-
-// Save snippet modal
-const saveModal = document.getElementById('saveModal');
-const snippetNameInput = document.getElementById('snippetNameInput');
-
-document.getElementById('btnSaveSnippet').addEventListener('click', openSaveModal);
-
-function openSaveModal() {
-  if (!editor.value.trim()) { showToast('Nothing to save', 'warning'); return; }
-  saveModal.classList.add('open');
-  snippetNameInput.value = '';
-  snippetNameInput.focus();
+  document.getElementById('themeBtn').innerHTML = isDark ? '&#9728; Light' : '&#9790; Dark';
+  localStorage.setItem('sfmc_qsp_theme', isDark ? 'light' : 'dark');
 }
 
-document.getElementById('btnCancelSave').addEventListener('click', () => saveModal.classList.remove('open'));
-document.getElementById('btnConfirmSave').addEventListener('click', () => {
-  const name = snippetNameInput.value.trim();
-  if (!name) { showToast('Enter a name', 'warning'); return; }
-  saveSnippet(name);
-  saveModal.classList.remove('open');
-});
-
-snippetNameInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') document.getElementById('btnConfirmSave').click();
-  if (e.key === 'Escape') saveModal.classList.remove('open');
-});
-
-saveModal.addEventListener('click', (e) => {
-  if (e.target === saveModal) saveModal.classList.remove('open');
-});
-
-// ─── Keyboard Shortcuts ───
-document.addEventListener('keydown', function(e) {
-  // Ctrl+Shift+F → Format
-  if (e.ctrlKey && e.shiftKey && e.key === 'F') {
-    e.preventDefault();
-    editor.value = formatSQL(editor.value);
-    updateEditor();
-    showToast('SQL formatted', 'success');
-  }
-  // Ctrl+S → Save snippet
-  if (e.ctrlKey && !e.shiftKey && e.key === 's') {
-    e.preventDefault();
-    openSaveModal();
-  }
-  // Ctrl+Shift+C → Copy
-  if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-    e.preventDefault();
-    copyToClipboard();
-  }
-  // Ctrl+F → Find
-  if (e.ctrlKey && !e.shiftKey && e.key === 'f') {
-    e.preventDefault();
-    findBar.classList.add('open');
-    findInput.focus();
-  }
-  // Escape
-  if (e.key === 'Escape') {
-    findBar.classList.remove('open');
-    saveModal.classList.remove('open');
-  }
-});
-
-// ─── Toast Notifications ───
+// Toast
 function showToast(msg, type) {
-  const container = document.getElementById('toasts');
-  const toast = document.createElement('div');
-  toast.className = 'toast ' + (type || 'info');
+  const toast = document.getElementById('toast');
   toast.textContent = msg;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  toast.className = 'toast visible ' + (type || '');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.className = 'toast', 2000);
 }
 
-// ─── Init ───
-function init() {
-  // Restore theme
-  const savedTheme = localStorage.getItem('qsp_theme');
+// Utility
+function formatDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+  return d.toLocaleDateString();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function init() {
+  // Load theme
+  const savedTheme = localStorage.getItem('sfmc_qsp_theme');
   if (savedTheme) {
     document.documentElement.setAttribute('data-theme', savedTheme);
-    document.getElementById('statusTheme').textContent = savedTheme === 'dark' ? '● Dark' : '● Light';
+    document.getElementById('themeBtn').innerHTML = savedTheme === 'dark' ? '&#9790; Dark' : '&#9728; Light';
   }
 
+  // Render panels
   renderTemplates();
-  renderReference();
-  renderSnippets();
-  renderHistory();
+  renderDataViews();
+
+  // Load default sample query
+  editor.value = `-- SFMC Query Studio Pro
+-- Find engaged subscribers from the last 30 days
+
+SELECT TOP 1000
+    s.SubscriberKey,
+    s.EmailAddress,
+    s.FirstName,
+    s.LastName,
+    COUNT(o.EventDate) AS TotalOpens,
+    MAX(o.EventDate) AS LastOpenDate
+FROM _Subscribers s
+INNER JOIN _Open o
+    ON s.SubscriberKey = o.SubscriberKey
+WHERE o.EventDate > DATEADD(day, -30, GETDATE())
+    AND s.Status = 'Active'
+GROUP BY
+    s.SubscriberKey,
+    s.EmailAddress,
+    s.FirstName,
+    s.LastName
+HAVING COUNT(o.EventDate) >= 3
+ORDER BY TotalOpens DESC`;
+
   updateEditor();
-}
-
-init();
-
+  editor.focus();
 })();
 </script>
 </body>
